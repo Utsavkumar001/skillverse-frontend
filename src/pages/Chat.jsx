@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
+import ChatMessage from '../components/ChatMessage';
 
 const FREE_TRIAL_LIMIT = 3;
 
@@ -147,16 +148,8 @@ export default function Chat() {
           </div>
         )}
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-              msg.role === 'user'
-                ? 'bg-gray-900 text-white rounded-br-sm'
-                : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-            }`}>
-              {msg.content}
-            </div>
-          </div>
-        ))}
+  <ChatMessage key={i} message={msg} />
+))}
         {loading && (
           <div className="flex justify-start">
             <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-sm">
