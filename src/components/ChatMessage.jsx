@@ -3,28 +3,8 @@ import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useEffect, useRef } from 'react';
-import mermaid from 'mermaid';
 
-mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
 
-function MermaidDiagram({ code }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (ref.current) {
-      mermaid.render('mermaid-' + Date.now(), code)
-        .then(({ svg }) => {
-          ref.current.innerHTML = svg;
-        })
-        .catch(() => {
-          // Silently show as code block if mermaid fails
-          ref.current.innerHTML = `<pre style="background:#f3f4f6;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;">${code}</pre>`;
-        });
-    }
-  }, [code]);
-
-  return <div ref={ref} className="my-3 overflow-x-auto" />;
-}
 
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
@@ -51,8 +31,12 @@ export default function ChatMessage({ message }) {
               const lang = match?.[1];
 
               if (!inline && lang === 'mermaid') {
-                return <MermaidDiagram code={String(children).trim()} />;
-              }
+  return (
+    <pre className="bg-gray-100 p-3 rounded-lg text-xs overflow-x-auto my-2 font-mono">
+      {String(children).trim()}
+    </pre>
+  );
+}
 
               if (!inline && lang) {
                 return (
