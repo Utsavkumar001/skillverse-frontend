@@ -18,16 +18,20 @@ export default function Chat() {
   const bottomRef = useRef(null);
 
   useEffect(() => {
-    api.get(`/agents/${agentId}`).then((res) => setAgent(res.data));
+  api.get(`/agents/${agentId}`).then((res) => setAgent(res.data));
 
-    api.get(`/chat/${agentId}/status`)
+  // Load chat history
+  api.get(`/chat/${agentId}/history`)
     .then((res) => {
-      setIsPaid(res.data.isPaid);
-      if (res.data.isPaid) setTrialEnded(false);
-      setTrialCount(res.data.trialCount || 0);
+      if (res.data.messages?.length > 0) {
+        setMessages(res.data.messages);
+        setTrialCount(res.data.trialCount || 0);
+        setIsPaid(res.data.isPaid || false);
+        if (res.data.isPaid) setTrialEnded(false);
+      }
     })
     .catch(() => {});
-  }, [agentId]);
+}, [agentId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
