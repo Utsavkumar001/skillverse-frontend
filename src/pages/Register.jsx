@@ -15,7 +15,7 @@ export default function Register() {
     try {
       const { data } = await api.post('/auth/register', form);
       login(data.token, data.user);
-      navigate('/marketplace');
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed');
     }
