@@ -12,11 +12,14 @@ function MermaidDiagram({ code }) {
 
   useEffect(() => {
     if (ref.current) {
-      mermaid.render('mermaid-' + Date.now(), code).then(({ svg }) => {
-        ref.current.innerHTML = svg;
-      }).catch(() => {
-        ref.current.innerHTML = `<pre>${code}</pre>`;
-      });
+      mermaid.render('mermaid-' + Date.now(), code)
+        .then(({ svg }) => {
+          ref.current.innerHTML = svg;
+        })
+        .catch(() => {
+          // Silently show as code block if mermaid fails
+          ref.current.innerHTML = `<pre style="background:#f3f4f6;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;">${code}</pre>`;
+        });
     }
   }, [code]);
 
