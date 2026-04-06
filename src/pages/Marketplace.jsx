@@ -37,6 +37,15 @@ export default function Marketplace() {
       .finally(() => setLoading(false));
   }, [category, sort]);
 
+import { useSearchParams } from 'react-router-dom';
+
+const [searchParams] = useSearchParams();
+
+useEffect(() => {
+  const cat = searchParams.get('category');
+  if (cat) setCategory(cat);
+}, []);
+
   const filtered = agents.filter((a) =>
     a.title.toLowerCase().includes(search.toLowerCase()) ||
     a.description.toLowerCase().includes(search.toLowerCase())
