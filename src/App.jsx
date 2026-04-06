@@ -12,6 +12,8 @@ import Register from './pages/Register';
 import CreatorDashboard from './pages/CreatorDashboard';
 import AgentBuilder from './pages/AgentBuilder';
 import MyLibrary from './pages/MyLibrary';
+import EditAgent from './pages/EditAgent';
+
 
 
 export default function App() {
@@ -38,6 +40,9 @@ export default function App() {
             <ProtectedRoute><MyLibrary /></ProtectedRoute>
           } />
         </Routes>
+        <Route path="/creator/edit/:id" element={
+  <ProtectedRoute><EditAgent /></ProtectedRoute>
+} />
       </BrowserRouter>
     </AuthProvider>
   );
