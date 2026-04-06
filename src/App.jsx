@@ -14,8 +14,6 @@ import AgentBuilder from './pages/AgentBuilder';
 import MyLibrary from './pages/MyLibrary';
 import EditAgent from './pages/EditAgent';
 
-
-
 export default function App() {
   return (
     <AuthProvider>
@@ -39,10 +37,10 @@ export default function App() {
           <Route path="/my-library" element={
             <ProtectedRoute><MyLibrary /></ProtectedRoute>
           } />
+          <Route path="/creator/edit/:id" element={
+            <ProtectedRoute><EditAgent /></ProtectedRoute>
+          } />
         </Routes>
-        <Route path="/creator/edit/:id" element={
-  <ProtectedRoute><EditAgent /></ProtectedRoute>
-} />
       </BrowserRouter>
     </AuthProvider>
   );
