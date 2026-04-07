@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 
 const CATEGORIES = ['all', 'learning', 'coding', 'career', 'research', 'productivity', 'creative'];
@@ -24,6 +24,13 @@ export default function Marketplace() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('newest');
+  const [searchParams] = useSearchParams();
+
+  // Read category from URL on first load
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    if (cat) setCategory(cat);
+  }, []);
 
   useEffect(() => {
     const params = {};
@@ -37,15 +44,6 @@ export default function Marketplace() {
       .finally(() => setLoading(false));
   }, [category, sort]);
 
-import { useSearchParams } from 'react-router-dom';
-
-const [searchParams] = useSearchParams();
-
-useEffect(() => {
-  const cat = searchParams.get('category');
-  if (cat) setCategory(cat);
-}, []);
-
   const filtered = agents.filter((a) =>
     a.title.toLowerCase().includes(search.toLowerCase()) ||
     a.description.toLowerCase().includes(search.toLowerCase())
@@ -53,13 +51,11 @@ useEffect(() => {
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">Marketplace</h1>
         <p className="text-gray-500">Discover AI agents built by creators for every learning need</p>
       </div>
 
-      {/* Search + Sort */}
       <div className="flex gap-3 mb-6">
         <div className="flex-1 relative">
           <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
@@ -82,7 +78,6 @@ useEffect(() => {
         </select>
       </div>
 
-      {/* Category pills */}
       <div className="flex gap-2 mb-8 flex-wrap">
         {CATEGORIES.map((c) => (
           <button
@@ -99,7 +94,6 @@ useEffect(() => {
         ))}
       </div>
 
-      {/* Agent grid */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {[...Array(6)].map((_, i) => (
@@ -132,12 +126,10 @@ useEffect(() => {
                   {agent.price === 0 ? '✦ Free' : `₹${agent.price}`}
                 </span>
               </div>
-
               <h3 className="font-semibold text-gray-900 mb-1.5 group-hover:text-gray-600 transition-colors">
                 {agent.title}
               </h3>
               <p className="text-sm text-gray-500 line-clamp-2 mb-4">{agent.description}</p>
-
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <div className="flex items-center gap-1.5">
                   <span>by {agent.creatorId?.name || 'Creator'}</span>
