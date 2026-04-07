@@ -13,6 +13,7 @@ import CreatorDashboard from './pages/CreatorDashboard';
 import AgentBuilder from './pages/AgentBuilder';
 import MyLibrary from './pages/MyLibrary';
 import EditAgent from './pages/EditAgent';
+import Profile from './pages/Profile';
 
 export default function App() {
   return (
@@ -40,6 +41,9 @@ export default function App() {
           <Route path="/creator/edit/:id" element={
             <ProtectedRoute><EditAgent /></ProtectedRoute>
           } />
+          <Route path="/profile" element={
+  <ProtectedRoute><Profile /></ProtectedRoute>
+} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
