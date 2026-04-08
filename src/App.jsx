@@ -14,6 +14,8 @@ import AgentBuilder from './pages/AgentBuilder';
 import MyLibrary from './pages/MyLibrary';
 import EditAgent from './pages/EditAgent';
 import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 export default function App() {
   return (
@@ -44,6 +46,8 @@ export default function App() {
           <Route path="/profile" element={
   <ProtectedRoute><Profile /></ProtectedRoute>
 } />
+<Route path="/forgot-password" element={<ForgotPassword />} />
+<Route path="/reset-password/:token" element={<ResetPassword />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

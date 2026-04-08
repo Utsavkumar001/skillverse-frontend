@@ -54,6 +54,11 @@ export default function Login() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </div>
+          <div className="flex justify-end mb-4">
+  <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-gray-900 transition-colors">
+    Forgot password?
+  </Link>
+</div>
           <button
             type="submit"
             className="w-full bg-gray-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
