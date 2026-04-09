@@ -85,24 +85,23 @@ export default function CreatorDashboard() {
                   </button>
                 )}
                 <Link
+                  to={`/creator/analytics/${agent._id}`}
+                  className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
+                >
+                  📊 Analytics
+                </Link>
+                <Link
+                  to={`/creator/edit/${agent._id}`}
+                  className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
+                >
+                  Edit
+                </Link>
+                <Link
                   to={`/agent/${agent._id}`}
                   className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                 >
                   View
                 </Link>
-
-                <Link
-  to={`/creator/edit/${agent._id}`}
-  className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
->
-  Edit
-</Link>
-<Link
-  to={`/creator/analytics/${agent._id}`}
-  className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
->
-  📊 Analytics
-</Link>
               </div>
             </div>
           ))}

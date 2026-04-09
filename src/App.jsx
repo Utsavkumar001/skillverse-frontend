@@ -20,7 +20,6 @@ import ResetPassword from './pages/ResetPassword';
 import AgentAnalytics from './pages/AgentAnalytics';
 import EmbedChat from './pages/EmbedChat';
 import ApiDocs from './pages/ApiDocs';
-import Footer from './components/Footer';
 
 
 export default function App() {
