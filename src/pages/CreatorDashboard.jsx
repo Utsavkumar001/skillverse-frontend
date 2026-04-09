@@ -97,6 +97,12 @@ export default function CreatorDashboard() {
 >
   Edit
 </Link>
+<Link
+  to={`/creator/analytics/${agent._id}`}
+  className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
+>
+  📊 Analytics
+</Link>
               </div>
             </div>
           ))}
