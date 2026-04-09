@@ -115,6 +115,18 @@ export default function AgentBuilder() {
           <input className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
             value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="DSA, algorithms, interview prep" />
         </div>
+
+        <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">Capabilities</label>
+  <p className="text-xs text-gray-400 mb-2">What can this agent do? (one per line)</p>
+  <textarea
+    rows={4}
+    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+    placeholder={"Explains concepts step by step\nGives code examples\nAnswers follow-up questions"}
+    value={form.capabilities?.join('\n') || ''}
+    onChange={(e) => setForm({ ...form, capabilities: e.target.value.split('\n').filter(Boolean) })}
+  />
+</div>
  
         <div className="flex gap-3 pt-2">
           <button onClick={() => handleSubmit(false)} disabled={saving}

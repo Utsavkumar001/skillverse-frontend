@@ -159,6 +159,18 @@ export default function EditAgent() {
           />
         </div>
 
+        <div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">Capabilities</label>
+  <p className="text-xs text-gray-400 mb-2">What can this agent do? (one per line)</p>
+  <textarea
+    rows={4}
+    className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+    placeholder={"Explains concepts step by step\nGives code examples"}
+    value={form.capabilities?.join('\n') || ''}
+    onChange={(e) => set('capabilities', e.target.value.split('\n').filter(Boolean))}
+  />
+</div>
+
         <div className="flex gap-3 pt-2">
           <button
             onClick={() => navigate('/creator/dashboard')}

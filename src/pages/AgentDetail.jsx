@@ -185,6 +185,20 @@ export default function AgentDetail() {
         </div>
       </div>
 
+      {agent.capabilities?.length > 0 && (
+  <div className="mb-6">
+    <h2 className="font-semibold text-gray-900 mb-3">What this agent can do</h2>
+    <div className="space-y-2">
+      {agent.capabilities.map((cap, i) => (
+        <div key={i} className="flex items-start gap-2.5">
+          <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+          <span className="text-sm text-gray-600">{cap}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
+
       {/* Example prompts */}
       {agent.examplePrompts?.length > 0 && (
         <div className="mb-6">
