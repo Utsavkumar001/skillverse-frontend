@@ -5,11 +5,17 @@ import api from '../api/axios';
 export default function CreatorDashboard() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [earnings, setEarnings] = useState(null);
+
 
   useEffect(() => {
     api.get('/agents/creator/mine')
       .then((res) => setAgents(res.data))
       .finally(() => setLoading(false));
+
+     api.get('/auth/earnings')
+    .then((res) => setEarnings(res.data))
+    .catch(() => {});
   }, []);
 
   const handlePublish = async (id) => {
@@ -56,7 +62,14 @@ export default function CreatorDashboard() {
 <div className="border border-gray-200 rounded-2xl p-5 mb-8 flex items-center justify-between bg-gray-50">
   <div>
     <p className="font-medium text-gray-900">💰 Creator Earnings</p>
-    <p className="text-sm text-gray-500 mt-0.5">Track your revenue and request withdrawals</p>
+    <p className="text-sm text-gray-500 mt-0.5">
+      Available: <span className="font-semibold text-gray-900">
+        ₹{earnings?.walletBalance?.toFixed(2) || '0.00'}
+      </span>
+      {' · '}Total earned: <span className="font-semibold text-gray-900">
+        ₹{earnings?.totalEarned?.toFixed(2) || '0.00'}
+      </span>
+    </p>
   </div>
   <Link
     to="/creator/earnings"
