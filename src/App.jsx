@@ -20,6 +20,8 @@ import ResetPassword from './pages/ResetPassword';
 import AgentAnalytics from './pages/AgentAnalytics';
 import EmbedChat from './pages/EmbedChat';
 import ApiDocs from './pages/ApiDocs';
+import CreatorEarnings from './pages/CreatorEarnings';
+
 
 
 export default function App() {
@@ -65,6 +67,9 @@ export default function App() {
                 <Route path="/profile" element={
                   <ProtectedRoute><Profile /></ProtectedRoute>
                 } />
+                <Route path="/creator/earnings" element={
+  <ProtectedRoute><CreatorEarnings /></ProtectedRoute>
+} />
               </Routes>
               <Footer />
             </>

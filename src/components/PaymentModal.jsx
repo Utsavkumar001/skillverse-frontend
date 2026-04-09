@@ -23,7 +23,7 @@ export default function PaymentModal({ agent, onClose, onSuccess }) {
         order_id: data.orderId,
         handler: async (response) => {
           // Step 3 — verify payment
-          const verify = await api.post('/payment/verify', response);
+          const verify = await api.post('/payment/verify', { response, agentId: agent._id });
           if (verify.data.success) {
             await api.post(`/chat/${agent._id}/mark-paid`);
             onSuccess();

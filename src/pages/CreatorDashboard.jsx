@@ -52,6 +52,20 @@ export default function CreatorDashboard() {
         </div>
       </div>
 
+      {/* Earnings Banner */}
+<div className="border border-gray-200 rounded-2xl p-5 mb-8 flex items-center justify-between bg-gray-50">
+  <div>
+    <p className="font-medium text-gray-900">💰 Creator Earnings</p>
+    <p className="text-sm text-gray-500 mt-0.5">Track your revenue and request withdrawals</p>
+  </div>
+  <Link
+    to="/creator/earnings"
+    className="bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors shrink-0"
+  >
+    View Earnings →
+  </Link>
+</div>
+
       {/* Agent list */}
       {loading ? (
         <div className="text-center text-gray-400 mt-10">Loading...</div>
