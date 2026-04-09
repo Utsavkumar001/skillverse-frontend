@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import EmailVerifyBanner from './components/EmailVerifyBanner';
+
 
 import Home from './pages/Home';
 import Marketplace from './pages/Marketplace';
@@ -21,6 +23,7 @@ import AgentAnalytics from './pages/AgentAnalytics';
 import EmbedChat from './pages/EmbedChat';
 import ApiDocs from './pages/ApiDocs';
 import CreatorEarnings from './pages/CreatorEarnings';
+import VerifyEmail from './pages/VerifyEmail';
 
 
 
@@ -37,6 +40,7 @@ export default function App() {
           <Route path="/*" element={
             <>
               <Navbar />
+              <EmailVerifyBanner />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/marketplace" element={<Marketplace />} />
@@ -74,6 +78,8 @@ export default function App() {
               <Footer />
             </>
           } />
+
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
 
         </Routes>
       </BrowserRouter>
