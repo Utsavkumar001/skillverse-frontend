@@ -7,13 +7,11 @@ export default function PaymentModal({ agent, onClose, onSuccess }) {
   const handlePayment = async () => {
     setLoading(true);
     try {
-      // Step 1 — order create karo
       const { data } = await api.post('/payment/create-order', {
         amount: agent.price,
         agentId: agent._id,
       });
 
-      // Step 2 — Razorpay checkout open karo
       const options = {
         key: data.keyId,
         amount: data.amount,
@@ -22,11 +20,20 @@ export default function PaymentModal({ agent, onClose, onSuccess }) {
         description: agent.title,
         order_id: data.orderId,
         handler: async (response) => {
-          // Step 3 — verify payment
-          const verify = await api.post('/payment/verify', { response, agentId: agent._id });
-          if (verify.data.success) {
-            await api.post(`/chat/${agent._id}/mark-paid`);
-            onSuccess();
+          try {
+            const verify = await api.post('/payment/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              agentId: agent._id,
+            });
+            if (verify.data.success) {
+              onSuccess();
+            } else {
+              alert('Payment verification failed. Contact support.');
+            }
+          } catch (err) {
+            alert('Verification error: ' + err.message);
           }
         },
         prefill: {
