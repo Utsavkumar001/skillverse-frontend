@@ -240,26 +240,28 @@ export default function AgentDetail() {
         </div>
       )}
 
-      {/* Embed Section */}
-<div className="border border-gray-200 rounded-2xl p-5 mb-6">
-  <h2 className="font-semibold text-gray-900 mb-1">Embed this agent</h2>
-  <p className="text-sm text-gray-500 mb-3">Add this agent to any website with one line of code.</p>
-  <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs text-gray-600 break-all select-all border border-gray-100">
-    {`<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`}
+      {/* Embed Section — show only to creator */}
+{user && agent.creatorId?._id === user.id && (
+  <div className="border border-gray-200 rounded-2xl p-5 mb-6">
+    <h2 className="font-semibold text-gray-900 mb-1">Embed this agent</h2>
+    <p className="text-sm text-gray-500 mb-3">Add this agent to any website with one line of code.</p>
+    <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs text-gray-600 break-all select-all border border-gray-100">
+      {`<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`}
+    </div>
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(
+          `<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`
+        );
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="mt-3 text-xs border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-400 transition-colors"
+    >
+      {copied ? '✓ Copied!' : 'Copy embed code'}
+    </button>
   </div>
-  <button
-    onClick={() => {
-      navigator.clipboard.writeText(
-        `<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`
-      );
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }}
-    className="mt-3 text-xs border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-400 transition-colors"
-  >
-    {copied ? '✓ Copied!' : 'Copy embed code'}
-  </button>
-</div>
+)}
 
       {/* Reviews */}
       <div>
