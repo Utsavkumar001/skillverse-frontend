@@ -23,6 +23,18 @@ export default function CreatorDashboard() {
     setAgents(agents.map((a) => a._id === id ? { ...a, isPublished: true } : a));
   };
 
+  // handleClone function add karo
+const handleClone = async (id) => {
+  try {
+    await api.post(`/agents/${id}/clone`);
+    // Refresh list
+    const res = await api.get('/agents/creator/mine');
+    setAgents(res.data);
+  } catch (err) {
+    alert(err.response?.data?.message || 'Clone failed');
+  }
+};
+
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-8">
@@ -123,6 +135,12 @@ export default function CreatorDashboard() {
                 >
                   Edit
                 </Link>
+                <button
+                  onClick={() => handleClone(agent._id)}
+                  className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
+                >
+                  Clone
+                </button>
                 <Link
                   to={`/agent/${agent._id}`}
                   className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
