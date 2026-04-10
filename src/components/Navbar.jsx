@@ -70,19 +70,32 @@ export default function Navbar() {
           />
 
           {/* Dropdown */}
-          <div className="fixed top-14 right-4 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg w-64 overflow-hidden">
-            {/* User info */}
-            <div className="px-4 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-medium">
-                  {user.name?.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-400 capitalize">{user.role}</p>
-                </div>
-              </div>
-            </div>
+<div className="fixed top-14 right-4 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg w-64 overflow-hidden">
+  {/* User info */}
+  <div className="px-4 py-4 border-b border-gray-100">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-medium">
+        {user.name?.charAt(0).toUpperCase()}
+      </div>
+      <div>
+        <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+        <p className="text-xs text-gray-400 capitalize">{user.role}</p>
+      </div>
+    </div>
+  </div>
+
+  {/* Admin link — sirf admin ko dikhega */}
+  {user?.role === 'admin' && (
+    <div className="border-b border-gray-100">
+      <Link
+        to="/admin"
+        onClick={() => setShowProfile(false)}
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+      >
+        🔐 Admin Panel
+      </Link>
+    </div>
+  )}
 
             {/* Menu items */}
             <div className="py-2">

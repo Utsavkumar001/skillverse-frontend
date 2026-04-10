@@ -24,6 +24,7 @@ import EmbedChat from './pages/EmbedChat';
 import ApiDocs from './pages/ApiDocs';
 import CreatorEarnings from './pages/CreatorEarnings';
 import VerifyEmail from './pages/VerifyEmail';
+import AdminPanel from './pages/AdminPanel';
 
 
 
@@ -72,8 +73,11 @@ export default function App() {
                   <ProtectedRoute><Profile /></ProtectedRoute>
                 } />
                 <Route path="/creator/earnings" element={
-  <ProtectedRoute><CreatorEarnings /></ProtectedRoute>
-} />
+                  <ProtectedRoute><CreatorEarnings /></ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute><AdminPanel /></ProtectedRoute>
+                } />
               </Routes>
               <Footer />
             </>
