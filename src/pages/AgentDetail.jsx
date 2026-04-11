@@ -32,16 +32,18 @@ export default function AgentDetail() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/agents/${id}`),
-      api.get(`/reviews/${id}`),
-      user ? api.get(`/chat/${id}/status`) : Promise.resolve({ data: { isPaid: false } }),
-    ]).then(([agentRes, reviewRes, statusRes]) => {
-      setAgent(agentRes.data);
-      setReviews(reviewRes.data);
-      setIsPurchased(statusRes.data.isPaid);
-    }).finally(() => setLoading(false));
-  }, [id, user]);
+  Promise.all([
+    api.get(`/agents/${id}`),
+    api.get(`/reviews/${id}`),
+    user ? api.get(`/chat/${id}/status`).catch(() => ({ data: { isPaid: false } })) : Promise.resolve({ data: { isPaid: false } }),
+  ]).then(([agentRes, reviewRes, statusRes]) => {
+    setAgent(agentRes.data);
+    setReviews(reviewRes.data);
+    setIsPurchased(statusRes.data.isPaid);
+  }).catch(() => {
+    setLoading(false);
+  }).finally(() => setLoading(false));
+}, [id, user]);
 
   const handleUse = () => {
     if (!user) return navigate('/login');
