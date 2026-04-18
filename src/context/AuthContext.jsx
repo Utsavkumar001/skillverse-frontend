@@ -19,10 +19,16 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
+  const login = async (token, userData) => {
+  localStorage.setItem('token', token);
+  // /auth/me se fresh data lo
+  try {
+    const res = await api.get('/auth/me');
+    setUser(res.data);
+  } catch {
     setUser(userData);
-  };
+  }
+};
 
   const logout = () => {
     localStorage.removeItem('token');
