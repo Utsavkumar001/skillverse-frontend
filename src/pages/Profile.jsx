@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import { useAuth } from '../context/AuthContext';
-
 
 export default function Profile() {
   const { user, login } = useAuth();
@@ -60,7 +58,9 @@ export default function Profile() {
             ) : (
               <h2 className="text-xl font-semibold text-gray-900">{user?.name}</h2>
             )}
-            <p className="text-sm text-gray-400 capitalize">{user?.role} · {user?.email}</p>
+            <p className="text-sm text-gray-400 capitalize">
+              {user?.role} · {user?.email?.toLowerCase()}
+            </p>
           </div>
         </div>
 
@@ -106,21 +106,21 @@ export default function Profile() {
 
       {/* Quick links */}
       <div className="border border-gray-200 rounded-2xl overflow-hidden">
-  {[
-    { label: '📚 My Library', path: '/my-library', show: true },
-    { label: '📊 Creator Dashboard', path: '/creator/dashboard', show: isCreator },
-    { label: '➕ Create Agent', path: '/creator/build', show: isCreator },
-  ].filter(item => item.show).map((item) => (
-    <button
-      key={item.path}
-      onClick={() => navigate(item.path)}
-      className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-    >
-      <span>{item.label}</span>
-      <span className="text-gray-400">→</span>
-    </button>
-  ))}
-</div>
+        {[
+          { label: '📚 My Library', path: '/my-library', show: true },
+          { label: '📊 Creator Dashboard', path: '/creator/dashboard', show: isCreator },
+          { label: '➕ Create Agent', path: '/creator/build', show: isCreator },
+        ].filter((item) => item.show).map((item) => (
+          <button
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            className="w-full flex items-center justify-between px-5 py-3.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+          >
+            <span>{item.label}</span>
+            <span className="text-gray-400">→</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
