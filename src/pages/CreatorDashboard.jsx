@@ -28,6 +28,16 @@ export default function CreatorDashboard() {
     }
   };
 
+  const handleDelete = async (id) => {
+  if (!window.confirm('Delete this agent? This cannot be undone.')) return;
+  try {
+    await api.delete(`/agents/${id}`);
+    setAgents(agents.filter(a => a._id !== id));
+  } catch (err) {
+    alert(err.response?.data?.message || 'Delete failed');
+  }
+};
+
   const handleClone = async (id) => {
     try {
       await api.post(`/agents/${id}/clone`);
@@ -164,6 +174,12 @@ export default function CreatorDashboard() {
                 >
                   View
                 </Link>
+                <button
+  onClick={() => handleDelete(agent._id)}
+  className="text-sm border border-red-200 text-red-500 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
+>
+  Delete
+</button>
               </div>
             </div>
           ))}

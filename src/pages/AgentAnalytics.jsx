@@ -7,6 +7,7 @@ export default function AgentAnalytics() {
   const [data, setData] = useState(null);
   const [agent, setAgent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -15,12 +16,28 @@ export default function AgentAnalytics() {
     ]).then(([agentRes, analyticsRes]) => {
       setAgent(agentRes.data);
       setData(analyticsRes.data);
+    }).catch((err) => {
+      setError(err.response?.data?.message || 'Failed to load analytics');
     }).finally(() => setLoading(false));
   }, [id]);
 
   if (loading) return <div className="flex justify-center mt-20 text-gray-400">Loading...</div>;
 
-  const maxMessages = Math.max(...data.last7Days.map(d => d.messages), 1);
+  if (error) return (
+    <div className="max-w-4xl mx-auto px-6 py-10 text-center">
+      <p className="text-red-500 mb-4">{error}</p>
+      <Link to="/creator/dashboard" className="text-sm text-gray-900 hover:underline">← Back to Dashboard</Link>
+    </div>
+  );
+
+  if (!data) return (
+    <div className="max-w-4xl mx-auto px-6 py-10 text-center">
+      <p className="text-gray-400 mb-4">No analytics data available</p>
+      <Link to="/creator/dashboard" className="text-sm text-gray-900 hover:underline">← Back to Dashboard</Link>
+    </div>
+  );
+
+  const maxMessages = Math.max(...(data.last7Days || []).map(d => d.messages), 1);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
@@ -36,12 +53,12 @@ export default function AgentAnalytics() {
       {/* Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Total Users', value: data.totalUsers, icon: '👥' },
-          { label: 'Paid Users', value: data.paidUsers, icon: '💳' },
-          { label: 'Total Messages', value: data.totalMessages, icon: '💬' },
-          { label: 'Revenue', value: `₹${data.revenue}`, icon: '💰' },
+          { label: 'Total Users', value: data.totalUsers || 0, icon: '👥' },
+          { label: 'Paid Users', value: data.paidUsers || 0, icon: '💳' },
+          { label: 'Total Messages', value: data.totalMessages || 0, icon: '💬' },
+          { label: 'Revenue', value: `₹${data.revenue || 0}`, icon: '💰' },
           { label: 'Avg Rating', value: data.avgRating || '—', icon: '⭐' },
-          { label: 'Total Uses', value: data.usageCount, icon: '🚀' },
+          { label: 'Total Uses', value: data.usageCount || 0, icon: '🚀' },
         ].map((stat) => (
           <div key={stat.label} className="border border-gray-200 rounded-2xl p-5">
             <div className="text-2xl mb-2">{stat.icon}</div>
@@ -55,7 +72,7 @@ export default function AgentAnalytics() {
       <div className="border border-gray-200 rounded-2xl p-6 mb-6">
         <h2 className="font-semibold text-gray-900 mb-6">Messages — Last 7 Days</h2>
         <div className="flex items-end gap-3 h-40">
-          {data.last7Days.map((day, i) => (
+          {(data.last7Days || []).map((day, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-2">
               <span className="text-xs text-gray-500 font-medium">
                 {day.messages > 0 ? day.messages : ''}
@@ -73,7 +90,7 @@ export default function AgentAnalytics() {
             </div>
           ))}
         </div>
-        {data.last7Days.every(d => d.messages === 0) && (
+        {(data.last7Days || []).every(d => d.messages === 0) && (
           <p className="text-center text-sm text-gray-400 mt-4">No messages yet this week</p>
         )}
       </div>
