@@ -137,27 +137,27 @@ export default function AgentBuilder() {
     setForm(BLANK_FORM);
   };
 
-  const handleSubmit = async (publish = false) => {
-    setSaving(true);
-    setError('');
-    try {
-      const payload = {
-        ...form,
-        examplePrompts: form.examplePrompts.filter(Boolean),
-        tags: typeof form.tags === 'string'
-          ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
-          : form.tags,
-      };
-      const { data } = await api.post('/agents', payload);
-      if (publish) await api.patch(`/agents/${data._id}/publish`);
-      localStorage.removeItem('agentDraft');
-      navigate('/creator/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Something went wrong');
-    } finally {
-      setSaving(false);
-    }
-  };
+  const handleSubmitForReview = async () => {
+  setSaving(true);
+  setError('');
+  try {
+    const payload = {
+      ...form,
+      examplePrompts: form.examplePrompts.filter(Boolean),
+      tags: typeof form.tags === 'string'
+        ? form.tags.split(',').map((t) => t.trim()).filter(Boolean)
+        : form.tags,
+    };
+    const { data } = await api.post('/agents', payload);
+    await api.patch(`/agents/${data._id}/submit-review`);
+    localStorage.removeItem('agentDraft');
+    navigate('/creator/dashboard');
+  } catch (err) {
+    setError(err.response?.data?.message || 'Something went wrong');
+  } finally {
+    setSaving(false);
+  }
+};
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
@@ -324,28 +324,28 @@ export default function AgentBuilder() {
 
         {/* Submit buttons */}
         {!user?.isEmailVerified ? (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
-            <p className="text-sm font-medium text-amber-800 mb-1">📧 Verify your email first</p>
-            <p className="text-xs text-amber-600">Check your inbox for the verification link to create and publish agents.</p>
-          </div>
-        ) : (
-          <div className="flex gap-3 pt-2">
-            <button
-              onClick={() => handleSubmit(false)}
-              disabled={saving}
-              className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-40 transition-colors"
-            >
-              Save draft
-            </button>
-            <button
-              onClick={() => handleSubmit(true)}
-              disabled={saving}
-              className="flex-1 bg-gray-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-40 transition-colors"
-            >
-              Publish agent
-            </button>
-          </div>
-        )}
+  <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 text-center">
+    <p className="text-sm font-medium text-amber-800 mb-1">📧 Verify your email first</p>
+    <p className="text-xs text-amber-600">Check your inbox for the verification link.</p>
+  </div>
+) : (
+  <div className="flex gap-3 pt-2">
+    <button
+      onClick={() => handleSubmit()}
+      disabled={saving}
+      className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-40 transition-colors"
+    >
+      {saving ? 'Saving...' : 'Save Draft'}
+    </button>
+    <button
+      onClick={handleSubmitForReview}
+      disabled={saving}
+      className="flex-1 bg-gray-900 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-40 transition-colors"
+    >
+      {saving ? 'Submitting...' : 'Submit for Review'}
+    </button>
+  </div>
+)}
       </div>
     </div>
   );

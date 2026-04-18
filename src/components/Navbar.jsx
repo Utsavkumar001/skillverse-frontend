@@ -15,6 +15,8 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const isCreator = user?.role === 'creator' || user?.role === 'admin';
+
   return (
     <>
       <nav className="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-50">
@@ -32,11 +34,12 @@ export default function Navbar() {
               <Link to="/my-library" className="hover:text-gray-900 transition-colors whitespace-nowrap hidden sm:block">
                 My Library
               </Link>
-              <Link to="/creator/dashboard" className="hover:text-gray-900 transition-colors whitespace-nowrap hidden sm:block">
-                Dashboard
-              </Link>
-
-              {/* Avatar */}
+              {/* Sirf creator/admin ko Dashboard dikhao */}
+              {isCreator && (
+                <Link to="/creator/dashboard" className="hover:text-gray-900 transition-colors whitespace-nowrap hidden sm:block">
+                  Dashboard
+                </Link>
+              )}
               <div
                 className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium cursor-pointer hover:bg-gray-700 transition-colors shrink-0"
                 onClick={() => setShowProfile(!showProfile)}
@@ -60,44 +63,37 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Profile Dropdown */}
       {showProfile && user && (
         <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowProfile(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
 
-          {/* Dropdown */}
-<div className="fixed top-14 right-4 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg w-64 overflow-hidden">
-  {/* User info */}
-  <div className="px-4 py-4 border-b border-gray-100">
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-medium">
-        {user.name?.charAt(0).toUpperCase()}
-      </div>
-      <div>
-        <p className="font-medium text-gray-900 text-sm">{user.name}</p>
-        <p className="text-xs text-gray-400 capitalize">{user.role}</p>
-      </div>
-    </div>
-  </div>
+          <div className="fixed top-14 right-4 z-50 bg-white border border-gray-200 rounded-2xl shadow-lg w-64 overflow-hidden">
+            {/* User info */}
+            <div className="px-4 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-medium">
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 text-sm">{user.name}</p>
+                  <p className="text-xs text-gray-400 capitalize">{user.role}</p>
+                </div>
+              </div>
+            </div>
 
-  {/* Admin link — sirf admin ko dikhega */}
-  {user?.role === 'admin' && (
-    <div className="border-b border-gray-100">
-      <Link
-        to="/admin"
-        onClick={() => setShowProfile(false)}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-      >
-        🔐 Admin Panel
-      </Link>
-    </div>
-  )}
+            {/* Admin link */}
+            {user?.role === 'admin' && (
+              <div className="border-b border-gray-100">
+                <Link
+                  to="/admin"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  🔐 Admin Panel
+                </Link>
+              </div>
+            )}
 
-            {/* Menu items */}
             <div className="py-2">
               <Link
                 to="/my-library"
@@ -106,36 +102,46 @@ export default function Navbar() {
               >
                 📚 My Library
               </Link>
+
+              {/* Sirf creator/admin ko dikhao */}
+              {isCreator && (
+                <>
+                  <Link
+                    to="/creator/dashboard"
+                    onClick={() => setShowProfile(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    📊 Dashboard
+                  </Link>
+                  <Link
+                    to="/creator/build"
+                    onClick={() => setShowProfile(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    ➕ Create Agent
+                  </Link>
+                  <Link
+                    to="/creator/earnings"
+                    onClick={() => setShowProfile(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    💰 Earnings
+                  </Link>
+                </>
+              )}
+
               <Link
-                to="/creator/dashboard"
+                to="/profile"
                 onClick={() => setShowProfile(false)}
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                📊 Dashboard
+                👤 My Profile
               </Link>
-              <Link
-                to="/creator/build"
-                onClick={() => setShowProfile(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                ➕ Create Agent
-              </Link>
-              <Link
-  to="/profile"
-  onClick={() => setShowProfile(false)}
-  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
->
-  👤 My Profile
-</Link>
             </div>
 
-            {/* Logout */}
             <div className="border-t border-gray-100 py-2">
               <button
-                onClick={() => {
-                  setShowProfile(false);
-                  setShowConfirm(true);
-                }}
+                onClick={() => { setShowProfile(false); setShowConfirm(true); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
               >
                 🚪 Logout
@@ -145,7 +151,6 @@ export default function Navbar() {
         </>
       )}
 
-      {/* Logout Confirmation Modal */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm">

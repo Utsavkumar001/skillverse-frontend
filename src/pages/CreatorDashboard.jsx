@@ -7,40 +7,56 @@ export default function CreatorDashboard() {
   const [loading, setLoading] = useState(true);
   const [earnings, setEarnings] = useState(null);
 
-
   useEffect(() => {
     api.get('/agents/creator/mine')
       .then((res) => setAgents(res.data))
       .finally(() => setLoading(false));
 
-     api.get('/auth/earnings')
-    .then((res) => setEarnings(res.data))
-    .catch(() => {});
+    api.get('/auth/earnings')
+      .then((res) => setEarnings(res.data))
+      .catch(() => {});
   }, []);
 
-  const handlePublish = async (id) => {
-    await api.patch(`/agents/${id}/publish`);
-    setAgents(agents.map((a) => a._id === id ? { ...a, isPublished: true } : a));
+  const handleSubmitReview = async (id) => {
+    try {
+      await api.patch(`/agents/${id}/submit-review`);
+      setAgents(agents.map(a =>
+        a._id === id ? { ...a, status: 'pending_review' } : a
+      ));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit');
+    }
   };
 
-  // handleClone function add karo
-const handleClone = async (id) => {
-  try {
-    await api.post(`/agents/${id}/clone`);
-    // Refresh list
-    const res = await api.get('/agents/creator/mine');
-    setAgents(res.data);
-  } catch (err) {
-    alert(err.response?.data?.message || 'Clone failed');
-  }
-};
+  const handleClone = async (id) => {
+    try {
+      await api.post(`/agents/${id}/clone`);
+      const res = await api.get('/agents/creator/mine');
+      setAgents(res.data);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Clone failed');
+    }
+  };
+
+  const getStatusBadge = (agent) => {
+    if (agent.isPublished || agent.status === 'published') {
+      return <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700">Published</span>;
+    }
+    if (agent.status === 'pending_review') {
+      return <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">⏳ Under Review</span>;
+    }
+    if (agent.status === 'rejected') {
+      return <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600">✗ Rejected</span>;
+    }
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Draft</span>;
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">My Agents</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage and track your published agents</p>
+          <p className="text-gray-500 text-sm mt-1">Manage and track your agents</p>
         </div>
         <Link
           to="/creator/build"
@@ -59,7 +75,7 @@ const handleClone = async (id) => {
         <div className="bg-gray-50 rounded-2xl p-4">
           <p className="text-sm text-gray-500">Published</p>
           <p className="text-2xl font-semibold text-gray-900 mt-1">
-            {agents.filter((a) => a.isPublished).length}
+            {agents.filter((a) => a.isPublished || a.status === 'published').length}
           </p>
         </div>
         <div className="bg-gray-50 rounded-2xl p-4">
@@ -71,25 +87,25 @@ const handleClone = async (id) => {
       </div>
 
       {/* Earnings Banner */}
-<div className="border border-gray-200 rounded-2xl p-5 mb-8 flex items-center justify-between bg-gray-50">
-  <div>
-    <p className="font-medium text-gray-900">💰 Creator Earnings</p>
-    <p className="text-sm text-gray-500 mt-0.5">
-      Available: <span className="font-semibold text-gray-900">
-        ₹{earnings?.walletBalance?.toFixed(2) || '0.00'}
-      </span>
-      {' · '}Total earned: <span className="font-semibold text-gray-900">
-        ₹{earnings?.totalEarned?.toFixed(2) || '0.00'}
-      </span>
-    </p>
-  </div>
-  <Link
-    to="/creator/earnings"
-    className="bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors shrink-0"
-  >
-    View Earnings →
-  </Link>
-</div>
+      <div className="border border-gray-200 rounded-2xl p-5 mb-8 flex items-center justify-between bg-gray-50">
+        <div>
+          <p className="font-medium text-gray-900">💰 Creator Earnings</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Available: <span className="font-semibold text-gray-900">
+              ₹{earnings?.walletBalance?.toFixed(2) || '0.00'}
+            </span>
+            {' · '}Total earned: <span className="font-semibold text-gray-900">
+              ₹{earnings?.totalEarned?.toFixed(2) || '0.00'}
+            </span>
+          </p>
+        </div>
+        <Link
+          to="/creator/earnings"
+          className="bg-gray-900 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors shrink-0"
+        >
+          View Earnings →
+        </Link>
+      </div>
 
       {/* Agent list */}
       {loading ? (
@@ -108,21 +124,22 @@ const handleClone = async (id) => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-medium text-gray-900">{agent.title}</h3>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${agent.isPublished ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {agent.isPublished ? 'Published' : 'Draft'}
-                  </span>
+                  {getStatusBadge(agent)}
                 </div>
                 <p className="text-sm text-gray-400">{agent.usageCount} uses · {agent.reviewCount} reviews · ★ {agent.averageRating}</p>
               </div>
-              <div className="flex gap-2">
-                {!agent.isPublished && (
+              <div className="flex gap-2 flex-wrap justify-end">
+
+                {/* Submit for Review — sirf draft pe */}
+                {!agent.isPublished && agent.status !== 'pending_review' && agent.status !== 'published' && (
                   <button
-                    onClick={() => handlePublish(agent._id)}
-                    className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
+                    onClick={() => handleSubmitReview(agent._id)}
+                    className="text-sm border border-amber-200 text-amber-700 px-4 py-2 rounded-lg hover:bg-amber-50 transition-colors"
                   >
-                    Publish
+                    Submit for Review
                   </button>
                 )}
+
                 <Link
                   to={`/creator/analytics/${agent._id}`}
                   className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
