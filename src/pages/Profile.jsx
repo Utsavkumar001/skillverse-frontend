@@ -13,7 +13,6 @@ export default function Profile() {
   const [name, setName] = useState(user?.name || '');
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState('');
-  const { user, login } = useAuth();
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
 
   useEffect(() => {
