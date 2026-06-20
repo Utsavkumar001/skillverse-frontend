@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 const CATEGORY_COLORS = {
@@ -12,14 +13,20 @@ const CATEGORY_COLORS = {
 };
 
 export default function Home() {
+  const { user } = useAuth();
   const [featuredAgents, setFeaturedAgents] = useState([]);
 
   useEffect(() => {
     api.get('/agents?sort=popular').then((res) => setFeaturedAgents(res.data.slice(0, 3)));
   }, []);
 
+  const isCreator = user?.role === 'creator' || user?.role === 'admin';
+  const isUser = user?.role === 'user';
+  const isPending = user?.creatorStatus === 'pending';
+
   return (
     <div className="min-h-screen bg-white">
+
       {/* Hero */}
       <div className="max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-600 text-xs px-4 py-2 rounded-full mb-8 font-medium">
@@ -33,22 +40,53 @@ export default function Home() {
         </h1>
 
         <p className="text-xl text-gray-500 mb-10 max-w-xl mx-auto leading-relaxed">
-          Browse, use, and create specialized AI agents for studying, coding, career growth, and research.
+          Browse and use specialized AI agents built by verified experts — for studying, coding, career growth, and research.
         </p>
 
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center flex-wrap">
           <Link
             to="/marketplace"
             className="bg-gray-900 text-white px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-all hover:scale-105 active:scale-95"
           >
             Browse Marketplace
           </Link>
-          <Link
-            to="/register"
-            className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-xl text-sm font-medium hover:border-gray-400 transition-all hover:scale-105 active:scale-95"
-          >
-            Become a Creator
-          </Link>
+
+          {/* Logged out — sirf register */}
+          {!user && (
+            <Link
+              to="/register"
+              className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-xl text-sm font-medium hover:border-gray-400 transition-all hover:scale-105 active:scale-95"
+            >
+              Get Started Free
+            </Link>
+          )}
+
+          {/* User — apply to create */}
+          {isUser && !isPending && (
+            <Link
+              to="/apply-creator"
+              className="border border-amber-200 text-amber-700 bg-amber-50 px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-amber-100 transition-all hover:scale-105 active:scale-95"
+            >
+              🛠️ Apply to Create
+            </Link>
+          )}
+
+          {/* Pending */}
+          {isUser && isPending && (
+            <span className="border border-gray-200 text-gray-400 px-8 py-3.5 rounded-xl text-sm font-medium cursor-default">
+              ⏳ Application Pending
+            </span>
+          )}
+
+          {/* Creator — go to dashboard */}
+          {isCreator && (
+            <Link
+              to="/creator/dashboard"
+              className="border border-gray-200 text-gray-700 px-8 py-3.5 rounded-xl text-sm font-medium hover:border-gray-400 transition-all hover:scale-105 active:scale-95"
+            >
+              My Dashboard →
+            </Link>
+          )}
         </div>
       </div>
 
@@ -56,7 +94,7 @@ export default function Home() {
       <div className="border-y border-gray-100 bg-gray-50 py-10">
         <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 gap-8 text-center">
           {[
-            { value: '5+', label: 'AI Agents' },
+            { value: '12+', label: 'AI Agents' },
             { value: '6', label: 'Categories' },
             { value: '100%', label: 'Free to start' },
           ].map((stat) => (
@@ -79,7 +117,9 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {featuredAgents.map((agent) => {
-              const colors = CATEGORY_COLORS[agent.category] || { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100', emoji: '🤖' };
+              const colors = CATEGORY_COLORS[agent.category] || {
+                bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-100', emoji: '🤖'
+              };
               return (
                 <Link
                   key={agent._id}
@@ -121,19 +161,35 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="bg-gray-900 mx-6 mb-16 rounded-3xl p-12 text-center max-w-5xl lg:mx-auto">
-        <h2 className="text-3xl font-semibold text-white mb-3">Build your own agent</h2>
-        <p className="text-gray-400 mb-8 max-w-md mx-auto">
-          Create specialized AI agents and share them with thousands of learners on SkillVerse.
-        </p>
-        <Link
-          to="/register"
-          className="bg-white text-gray-900 px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all hover:scale-105 active:scale-95 inline-block"
-        >
-          Start creating →
-        </Link>
-      </div>
+      {/* CTA — sirf non-creator users ko dikhao */}
+      {!isCreator && (
+        <div className="bg-gray-900 mx-6 mb-16 rounded-3xl p-12 text-center max-w-5xl lg:mx-auto">
+          <h2 className="text-3xl font-semibold text-white mb-3">Are you an expert?</h2>
+          <p className="text-gray-400 mb-8 max-w-md mx-auto">
+            Share your expertise through AI agents. Verified creators earn 80% of every sale on SkillVerse.
+          </p>
+          {!user ? (
+            <Link
+              to="/register"
+              className="bg-white text-gray-900 px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all hover:scale-105 active:scale-95 inline-block"
+            >
+              Get Started →
+            </Link>
+          ) : isUser && !isPending ? (
+            <Link
+              to="/apply-creator"
+              className="bg-white text-gray-900 px-8 py-3.5 rounded-xl text-sm font-medium hover:bg-gray-100 transition-all hover:scale-105 active:scale-95 inline-block"
+            >
+              Apply to Create →
+            </Link>
+          ) : isPending ? (
+            <span className="bg-white text-gray-400 px-8 py-3.5 rounded-xl text-sm font-medium inline-block cursor-default">
+              ⏳ Application Under Review
+            </span>
+          ) : null}
+        </div>
+      )}
+
     </div>
   );
 }
