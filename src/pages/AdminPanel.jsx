@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
-const TABS = ['Overview', 'Users', 'Agents'];
+const TABS = ['Overview', 'Users', 'Agents', 'Creator Applications'];
 
 export default function AdminPanel() {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ export default function AdminPanel() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [agents, setAgents] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
@@ -29,11 +30,12 @@ export default function AdminPanel() {
       } else if (tab === 'Agents') {
         const { data } = await api.get('/admin/agents');
         setAgents(data);
+      } else if (tab === 'Creator Applications') {
+        const { data } = await api.get('/creator-application/all');
+        setApplications(data);
       }
     } catch (err) {
-      if (err.response?.status === 403) {
-        navigate('/');
-      }
+      if (err.response?.status === 403) navigate('/');
     } finally {
       setLoading(false);
     }
@@ -62,6 +64,30 @@ export default function AdminPanel() {
     }
   };
 
+  const handleApproveCreator = async (id) => {
+    try {
+      await api.patch(`/creator-application/${id}/approve`);
+      setApplications(applications.map(a =>
+        a._id === id ? { ...a, creatorStatus: 'approved', role: 'creator' } : a
+      ));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve');
+    }
+  };
+
+  const handleRejectCreator = async (id) => {
+    const reason = prompt('Rejection reason:');
+    if (!reason) return;
+    try {
+      await api.patch(`/creator-application/${id}/reject`, { reason });
+      setApplications(applications.map(a =>
+        a._id === id ? { ...a, creatorStatus: 'rejected' } : a
+      ));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject');
+    }
+  };
+
   const filteredUsers = users.filter(u =>
     u.name?.toLowerCase().includes(search.toLowerCase()) ||
     u.email?.toLowerCase().includes(search.toLowerCase())
@@ -70,6 +96,8 @@ export default function AdminPanel() {
   const filteredAgents = agents.filter(a =>
     a.title?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const pendingApplications = applications.filter(a => a.creatorStatus === 'pending').length;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -85,18 +113,24 @@ export default function AdminPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-gray-200">
+      <div className="flex gap-2 mb-6 border-b border-gray-200 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setSearch(''); }}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap flex items-center gap-2 ${
               tab === t
                 ? 'border-gray-900 text-gray-900'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             {t}
+            {/* Pending badge */}
+            {t === 'Creator Applications' && pendingApplications > 0 && (
+              <span className="bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                {pendingApplications}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -107,25 +141,23 @@ export default function AdminPanel() {
         <>
           {/* Overview Tab */}
           {tab === 'Overview' && stats && (
-            <div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                {[
-                  { label: 'Total Users', value: stats.totalUsers, icon: '👥' },
-                  { label: 'Total Agents', value: stats.totalAgents, icon: '🤖' },
-                  { label: 'Published', value: stats.publishedAgents, icon: '✅' },
-                  { label: 'Pending Review', value: stats.pendingAgents, icon: '⏳' },
-                  { label: 'Verified Users', value: stats.verifiedUsers, icon: '📧' },
-                  { label: 'Banned Users', value: stats.bannedUsers, icon: '🚫' },
-                  { label: 'Platform Revenue', value: `₹${(stats.totalRevenue * 0.2).toFixed(0)}`, icon: '💰' },
-                  { label: 'Creator Payouts', value: `₹${(stats.totalRevenue).toFixed(0)}`, icon: '💸' },
-                ].map((stat) => (
-                  <div key={stat.label} className="border border-gray-200 rounded-2xl p-4">
-                    <div className="text-2xl mb-2">{stat.icon}</div>
-                    <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-                    <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              {[
+                { label: 'Total Users', value: stats.totalUsers, icon: '👥' },
+                { label: 'Total Agents', value: stats.totalAgents, icon: '🤖' },
+                { label: 'Published', value: stats.publishedAgents, icon: '✅' },
+                { label: 'Pending Review', value: stats.pendingAgents, icon: '⏳' },
+                { label: 'Verified Users', value: stats.verifiedUsers, icon: '📧' },
+                { label: 'Banned Users', value: stats.bannedUsers, icon: '🚫' },
+                { label: 'Platform Revenue', value: `₹${(stats.totalRevenue * 0.2).toFixed(0)}`, icon: '💰' },
+                { label: 'Creator Payouts', value: `₹${(stats.totalRevenue).toFixed(0)}`, icon: '💸' },
+              ].map((stat) => (
+                <div key={stat.label} className="border border-gray-200 rounded-2xl p-4">
+                  <div className="text-2xl mb-2">{stat.icon}</div>
+                  <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                </div>
+              ))}
             </div>
           )}
 
@@ -154,8 +186,13 @@ export default function AdminPanel() {
                         {!user.isEmailVerified && (
                           <span className="text-xs bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded-full">📧 Unverified</span>
                         )}
+                        {user.role === 'creator' && (
+                          <span className="text-xs bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-full">🛠️ Creator</span>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-400">{user.email} · {user.role} · Joined {new Date(user.createdAt).toLocaleDateString('en-IN')}</p>
+                      <p className="text-xs text-gray-400">
+                        {user.email} · {user.role} · Joined {new Date(user.createdAt).toLocaleDateString('en-IN')}
+                      </p>
                       {user.isBanned && user.banReason && (
                         <p className="text-xs text-red-500 mt-1">Reason: {user.banReason}</p>
                       )}
@@ -242,6 +279,133 @@ export default function AdminPanel() {
                 ))}
                 {filteredAgents.length === 0 && (
                   <div className="text-center py-10 text-gray-400">No agents found</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Creator Applications Tab */}
+          {tab === 'Creator Applications' && (
+            <div>
+              {/* Filter tabs */}
+              <div className="flex gap-2 mb-4">
+                {['all', 'pending', 'approved', 'rejected'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setSearch(f === 'all' ? '' : f)}
+                    className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors ${
+                      (f === 'all' && !search) || search === f
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                    }`}
+                  >
+                    {f} {f === 'pending' && pendingApplications > 0 && `(${pendingApplications})`}
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-4">
+                {applications
+                  .filter(a => !search || a.creatorStatus === search)
+                  .map((app) => (
+                  <div key={app._id} className={`border rounded-2xl p-5 ${
+                    app.creatorStatus === 'approved' ? 'border-green-200 bg-green-50' :
+                    app.creatorStatus === 'rejected' ? 'border-red-200 bg-red-50' :
+                    'border-gray-200'
+                  }`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        {/* Name + Status */}
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-gray-900">{app.name}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            app.creatorStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                            app.creatorStatus === 'rejected' ? 'bg-red-100 text-red-600' :
+                            'bg-amber-50 text-amber-700'
+                          }`}>
+                            {app.creatorStatus === 'approved' ? '✓ Approved' :
+                             app.creatorStatus === 'rejected' ? '✗ Rejected' :
+                             '⏳ Pending'}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-gray-400 mb-3">
+                          {app.email} · Applied {app.creatorApplication?.appliedAt
+                            ? new Date(app.creatorApplication.appliedAt).toLocaleDateString('en-IN')
+                            : 'N/A'}
+                        </p>
+
+                        {/* Application details */}
+                        <div className="space-y-2 bg-white rounded-xl p-3 border border-gray-100">
+                          <div>
+                            <span className="text-xs font-medium text-gray-600">Expertise: </span>
+                            <span className="text-xs text-gray-500">{app.creatorApplication?.expertise || '—'}</span>
+                          </div>
+                          <div>
+                            <span className="text-xs font-medium text-gray-600">Reason: </span>
+                            <span className="text-xs text-gray-500">{app.creatorApplication?.reason || '—'}</span>
+                          </div>
+                          {app.creatorApplication?.linkedin && (
+                            <div>
+                              <span className="text-xs font-medium text-gray-600">LinkedIn: </span>
+                              
+                                href={app.creatorApplication.linkedin}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                {app.creatorApplication.linkedin}
+                              </a>
+                            </div>
+                          )}
+                          {app.creatorApplication?.portfolio && (
+                            <div>
+                              <span className="text-xs font-medium text-gray-600">Portfolio: </span>
+                              
+                                href={app.creatorApplication.portfolio}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-blue-600 hover:underline"
+                              >
+                                {app.creatorApplication.portfolio}
+                              </a>
+                            </div>
+                          )}
+                          {app.creatorStatus === 'rejected' && app.creatorApplication?.rejectionReason && (
+                            <div>
+                              <span className="text-xs font-medium text-red-600">Rejection Reason: </span>
+                              <span className="text-xs text-red-500">{app.creatorApplication.rejectionReason}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Action buttons — sirf pending pe */}
+                      {app.creatorStatus === 'pending' && (
+                        <div className="flex flex-col gap-2 shrink-0">
+                          <button
+                            onClick={() => handleApproveCreator(app._id)}
+                            className="text-xs border border-green-200 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors whitespace-nowrap"
+                          >
+                            ✓ Approve
+                          </button>
+                          <button
+                            onClick={() => handleRejectCreator(app._id)}
+                            className="text-xs border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"
+                          >
+                            ✗ Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {applications.filter(a => !search || a.creatorStatus === search).length === 0 && (
+                  <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
+                    <p className="text-3xl mb-2">📋</p>
+                    <p className="text-gray-400 text-sm">No applications yet</p>
+                  </div>
                 )}
               </div>
             </div>

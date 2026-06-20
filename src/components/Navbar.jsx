@@ -16,6 +16,8 @@ export default function Navbar() {
   };
 
   const isCreator = user?.role === 'creator' || user?.role === 'admin';
+  const isPending = user?.creatorStatus === 'pending';
+  const isUser = user?.role === 'user';
 
   return (
     <>
@@ -34,12 +36,31 @@ export default function Navbar() {
               <Link to="/my-library" className="hover:text-gray-900 transition-colors whitespace-nowrap hidden sm:block">
                 My Library
               </Link>
+
               {/* Sirf creator/admin ko Dashboard dikhao */}
               {isCreator && (
                 <Link to="/creator/dashboard" className="hover:text-gray-900 transition-colors whitespace-nowrap hidden sm:block">
                   Dashboard
                 </Link>
               )}
+
+              {/* User ko Apply button dikhao */}
+              {isUser && !isPending && (
+                <Link
+                  to="/apply-creator"
+                  className="hidden sm:block bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-100 transition-colors whitespace-nowrap"
+                >
+                  🛠️ Apply to Create
+                </Link>
+              )}
+
+              {/* Pending state */}
+              {isUser && isPending && (
+                <span className="hidden sm:block text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg whitespace-nowrap">
+                  ⏳ Application Pending
+                </span>
+              )}
+
               <div
                 className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center text-white text-sm font-medium cursor-pointer hover:bg-gray-700 transition-colors shrink-0"
                 onClick={() => setShowProfile(!showProfile)}
@@ -76,7 +97,10 @@ export default function Navbar() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 text-sm">{user.name}</p>
-                  <p className="text-xs text-gray-400 capitalize">{user.role}</p>
+                  <p className="text-xs text-gray-400 capitalize">
+                    {user.role === 'user' ? 'Member' : user.role}
+                    {isPending && ' · Application Pending'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -103,7 +127,7 @@ export default function Navbar() {
                 📚 My Library
               </Link>
 
-              {/* Sirf creator/admin ko dikhao */}
+              {/* Creator links */}
               {isCreator && (
                 <>
                   <Link
@@ -128,6 +152,24 @@ export default function Navbar() {
                     💰 Earnings
                   </Link>
                 </>
+              )}
+
+              {/* Apply to Create — sirf user ko */}
+              {isUser && !isPending && (
+                <Link
+                  to="/apply-creator"
+                  onClick={() => setShowProfile(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-amber-700 hover:bg-amber-50 transition-colors"
+                >
+                  🛠️ Apply to Create
+                </Link>
+              )}
+
+              {/* Pending */}
+              {isUser && isPending && (
+                <div className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-400 cursor-default">
+                  ⏳ Application Under Review
+                </div>
               )}
 
               <Link

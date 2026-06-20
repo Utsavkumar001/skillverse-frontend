@@ -25,6 +25,7 @@ import ApiDocs from './pages/ApiDocs';
 import CreatorEarnings from './pages/CreatorEarnings';
 import VerifyEmail from './pages/VerifyEmail';
 import AdminPanel from './pages/AdminPanel';
+import ApplyCreator from './pages/ApplyCreator';
 
 
 
@@ -77,6 +78,9 @@ export default function App() {
                 } />
                 <Route path="/admin" element={
                   <ProtectedRoute><AdminPanel /></ProtectedRoute>
+                } />
+                <Route path="/apply-creator" element={
+                  <ProtectedRoute><ApplyCreator /></ProtectedRoute>
                 } />
               </Routes>
               <Footer />
