@@ -13,9 +13,12 @@ export default function AdminPanel() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [appFilter, setAppFilter] = useState('all');
 
   useEffect(() => {
     loadData();
+    setSearch('');
+    setAppFilter('all');
   }, [tab]);
 
   const loadData = async () => {
@@ -97,10 +100,16 @@ export default function AdminPanel() {
     a.title?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const pendingApplications = applications.filter(a => a.creatorStatus === 'pending').length;
+  const filteredApplications = applications.filter(a => {
+    if (appFilter === 'all') return true;
+    return a.creatorStatus === appFilter;
+  });
+
+  const pendingCount = applications.filter(a => a.creatorStatus === 'pending').length;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
+
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -117,7 +126,7 @@ export default function AdminPanel() {
         {TABS.map((t) => (
           <button
             key={t}
-            onClick={() => { setTab(t); setSearch(''); }}
+            onClick={() => setTab(t)}
             className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap flex items-center gap-2 ${
               tab === t
                 ? 'border-gray-900 text-gray-900'
@@ -125,10 +134,9 @@ export default function AdminPanel() {
             }`}
           >
             {t}
-            {/* Pending badge */}
-            {t === 'Creator Applications' && pendingApplications > 0 && (
+            {t === 'Creator Applications' && pendingCount > 0 && (
               <span className="bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                {pendingApplications}
+                {pendingCount}
               </span>
             )}
           </button>
@@ -139,9 +147,9 @@ export default function AdminPanel() {
         <div className="text-center text-gray-400 mt-20">Loading...</div>
       ) : (
         <>
-          {/* Overview Tab */}
+          {/* Overview */}
           {tab === 'Overview' && stats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: 'Total Users', value: stats.totalUsers, icon: '👥' },
                 { label: 'Total Agents', value: stats.totalAgents, icon: '🤖' },
@@ -161,7 +169,7 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Users Tab */}
+          {/* Users */}
           {tab === 'Users' && (
             <div>
               <input
@@ -173,21 +181,26 @@ export default function AdminPanel() {
               />
               <div className="space-y-3">
                 {filteredUsers.map((user) => (
-                  <div key={user._id} className={`border rounded-2xl p-4 flex items-center justify-between ${user.isBanned ? 'border-red-200 bg-red-50' : 'border-gray-200'}`}>
+                  <div
+                    key={user._id}
+                    className={`border rounded-2xl p-4 flex items-center justify-between ${
+                      user.isBanned ? 'border-red-200 bg-red-50' : 'border-gray-200'
+                    }`}
+                  >
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <p className="font-medium text-gray-900">{user.name}</p>
                         {user.isVerified && (
                           <span className="text-xs bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-full">✓ Verified</span>
+                        )}
+                        {user.role === 'creator' && (
+                          <span className="text-xs bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-full">🛠️ Creator</span>
                         )}
                         {user.isBanned && (
                           <span className="text-xs bg-red-50 text-red-600 border border-red-100 px-1.5 py-0.5 rounded-full">🚫 Banned</span>
                         )}
                         {!user.isEmailVerified && (
                           <span className="text-xs bg-amber-50 text-amber-600 border border-amber-100 px-1.5 py-0.5 rounded-full">📧 Unverified</span>
-                        )}
-                        {user.role === 'creator' && (
-                          <span className="text-xs bg-purple-50 text-purple-600 border border-purple-100 px-1.5 py-0.5 rounded-full">🛠️ Creator</span>
                         )}
                       </div>
                       <p className="text-xs text-gray-400">
@@ -226,7 +239,7 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Agents Tab */}
+          {/* Agents */}
           {tab === 'Agents' && (
             <div>
               <input
@@ -284,39 +297,41 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* Creator Applications Tab */}
+          {/* Creator Applications */}
           {tab === 'Creator Applications' && (
             <div>
-              {/* Filter tabs */}
-              <div className="flex gap-2 mb-4">
+              {/* Filter buttons */}
+              <div className="flex gap-2 mb-6 flex-wrap">
                 {['all', 'pending', 'approved', 'rejected'].map((f) => (
                   <button
                     key={f}
-                    onClick={() => setSearch(f === 'all' ? '' : f)}
+                    onClick={() => setAppFilter(f)}
                     className={`text-xs px-3 py-1.5 rounded-full border capitalize transition-colors ${
-                      (f === 'all' && !search) || search === f
+                      appFilter === f
                         ? 'bg-gray-900 text-white border-gray-900'
                         : 'border-gray-200 text-gray-600 hover:border-gray-400'
                     }`}
                   >
-                    {f} {f === 'pending' && pendingApplications > 0 && `(${pendingApplications})`}
+                    {f}
+                    {f === 'pending' && pendingCount > 0 && ` (${pendingCount})`}
                   </button>
                 ))}
               </div>
 
               <div className="space-y-4">
-                {applications
-                  .filter(a => !search || a.creatorStatus === search)
-                  .map((app) => (
-                  <div key={app._id} className={`border rounded-2xl p-5 ${
-                    app.creatorStatus === 'approved' ? 'border-green-200 bg-green-50' :
-                    app.creatorStatus === 'rejected' ? 'border-red-200 bg-red-50' :
-                    'border-gray-200'
-                  }`}>
+                {filteredApplications.map((app) => (
+                  <div
+                    key={app._id}
+                    className={`border rounded-2xl p-5 ${
+                      app.creatorStatus === 'approved' ? 'border-green-200 bg-green-50' :
+                      app.creatorStatus === 'rejected' ? 'border-red-200 bg-red-50' :
+                      'border-gray-200'
+                    }`}
+                  >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
-                        {/* Name + Status */}
-                        <div className="flex items-center gap-2 mb-1">
+                        {/* Name + status */}
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <p className="font-medium text-gray-900">{app.name}</p>
                           <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                             app.creatorStatus === 'approved' ? 'bg-green-100 text-green-700' :
@@ -330,13 +345,15 @@ export default function AdminPanel() {
                         </div>
 
                         <p className="text-xs text-gray-400 mb-3">
-                          {app.email} · Applied {app.creatorApplication?.appliedAt
-                            ? new Date(app.creatorApplication.appliedAt).toLocaleDateString('en-IN')
-                            : 'N/A'}
+                          {app.email} · Applied {
+                            app.creatorApplication?.appliedAt
+                              ? new Date(app.creatorApplication.appliedAt).toLocaleDateString('en-IN')
+                              : 'N/A'
+                          }
                         </p>
 
-                        {/* Application details */}
-                        <div className="space-y-2 bg-white rounded-xl p-3 border border-gray-100">
+                        {/* Details */}
+                        <div className="bg-white rounded-xl p-3 border border-gray-100 space-y-2">
                           <div>
                             <span className="text-xs font-medium text-gray-600">Expertise: </span>
                             <span className="text-xs text-gray-500">{app.creatorApplication?.expertise || '—'}</span>
@@ -348,7 +365,7 @@ export default function AdminPanel() {
                           {app.creatorApplication?.linkedin && (
                             <div>
                               <span className="text-xs font-medium text-gray-600">LinkedIn: </span>
-                              
+                              <a
                                 href={app.creatorApplication.linkedin}
                                 target="_blank"
                                 rel="noreferrer"
@@ -361,7 +378,7 @@ export default function AdminPanel() {
                           {app.creatorApplication?.portfolio && (
                             <div>
                               <span className="text-xs font-medium text-gray-600">Portfolio: </span>
-                              
+                              <a
                                 href={app.creatorApplication.portfolio}
                                 target="_blank"
                                 rel="noreferrer"
@@ -380,18 +397,18 @@ export default function AdminPanel() {
                         </div>
                       </div>
 
-                      {/* Action buttons — sirf pending pe */}
+                      {/* Approve / Reject buttons */}
                       {app.creatorStatus === 'pending' && (
                         <div className="flex flex-col gap-2 shrink-0">
                           <button
                             onClick={() => handleApproveCreator(app._id)}
-                            className="text-xs border border-green-200 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors whitespace-nowrap"
+                            className="text-xs border border-green-200 text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors"
                           >
                             ✓ Approve
                           </button>
                           <button
                             onClick={() => handleRejectCreator(app._id)}
-                            className="text-xs border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"
+                            className="text-xs border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors"
                           >
                             ✗ Reject
                           </button>
@@ -401,10 +418,10 @@ export default function AdminPanel() {
                   </div>
                 ))}
 
-                {applications.filter(a => !search || a.creatorStatus === search).length === 0 && (
+                {filteredApplications.length === 0 && (
                   <div className="text-center py-16 border border-dashed border-gray-200 rounded-2xl">
                     <p className="text-3xl mb-2">📋</p>
-                    <p className="text-gray-400 text-sm">No applications yet</p>
+                    <p className="text-gray-400 text-sm">No applications found</p>
                   </div>
                 )}
               </div>
