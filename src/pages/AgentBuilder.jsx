@@ -23,6 +23,7 @@ const BLANK_FORM = {
   capabilities: [],
   externalApiUrl: '',
   agentType: 'internal', // 'internal' | 'external'
+  knowledgeSources: [],
 };
 
 const TEMPLATES = [
@@ -136,6 +137,7 @@ export default function AgentBuilder() {
         tags: Array.isArray(parsed.tags) ? parsed.tags.join(', ') : (parsed.tags || ''),
         externalApiUrl: parsed.externalApiUrl || '',
         agentType: parsed.externalApiUrl ? 'external' : 'internal',
+        knowledgeSources: parsed.knowledgeSources || [],
       });
 
       setImportMode('manual');
@@ -645,6 +647,46 @@ export default function AgentBuilder() {
                 value={form.capabilities?.join('\n') || ''}
                 onChange={(e) => set('capabilities', e.target.value.split('\n').filter(Boolean))}
               />
+            </div>
+
+            {/* Knowledge Sources */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Knowledge Sources</label>
+              <p className="text-xs text-gray-400 mb-3">
+                What is this agent's knowledge based on? Users will see this as a trust signal.
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  'Books', 'Research Papers', 'Personal Notes',
+                  'Company SOPs', 'Videos', 'PDFs',
+                  'Fine-tuned Model', 'External API',
+                  'IIT/University Notes', 'GATE/Exam PYQs',
+                ].map((source) => (
+                  <button
+                    key={source}
+                    type="button"
+                    onClick={() => {
+                      const current = form.knowledgeSources || [];
+                      const updated = current.includes(source)
+                        ? current.filter(s => s !== source)
+                        : [...current, source];
+                      set('knowledgeSources', updated);
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      (form.knowledgeSources || []).includes(source)
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                    }`}
+                  >
+                    {(form.knowledgeSources || []).includes(source) ? '✓ ' : ''}{source}
+                  </button>
+                ))}
+              </div>
+              {(form.knowledgeSources || []).length > 0 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  Selected: {form.knowledgeSources.join(', ')}
+                </p>
+              )}
             </div>
 
             {/* Submit buttons */}
