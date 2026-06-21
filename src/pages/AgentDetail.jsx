@@ -18,6 +18,19 @@ const CATEGORY_EMOJIS = {
   research: '📄', productivity: '⚡', creative: '🎨',
 };
 
+const KNOWLEDGE_SOURCE_ICONS = {
+  'Books': '📚',
+  'Research Papers': '📄',
+  'Personal Notes': '📝',
+  'Company SOPs': '🏢',
+  'Videos': '🎥',
+  'PDFs': '📑',
+  'Fine-tuned Model': '🧠',
+  'External API': '🔗',
+  'IIT/University Notes': '🎓',
+  'GATE/Exam PYQs': '📋',
+};
+
 export default function AgentDetail() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -32,18 +45,18 @@ export default function AgentDetail() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-  Promise.all([
-    api.get(`/agents/${id}`),
-    api.get(`/reviews/${id}`),
-    user ? api.get(`/chat/${id}/status`).catch(() => ({ data: { isPaid: false } })) : Promise.resolve({ data: { isPaid: false } }),
-  ]).then(([agentRes, reviewRes, statusRes]) => {
-    setAgent(agentRes.data);
-    setReviews(reviewRes.data);
-    setIsPurchased(statusRes.data.isPaid);
-  }).catch(() => {
-    setLoading(false);
-  }).finally(() => setLoading(false));
-}, [id, user]);
+    Promise.all([
+      api.get(`/agents/${id}`),
+      api.get(`/reviews/${id}`),
+      user ? api.get(`/chat/${id}/status`).catch(() => ({ data: { isPaid: false } })) : Promise.resolve({ data: { isPaid: false } }),
+    ]).then(([agentRes, reviewRes, statusRes]) => {
+      setAgent(agentRes.data);
+      setReviews(reviewRes.data);
+      setIsPurchased(statusRes.data.isPaid);
+    }).catch(() => {
+      setLoading(false);
+    }).finally(() => setLoading(false));
+  }, [id, user]);
 
   const handleUse = () => {
     if (!user) return navigate('/login');
@@ -55,10 +68,10 @@ export default function AgentDetail() {
   };
 
   const handleShare = () => {
-  navigator.clipboard.writeText(window.location.href);
-  setCopied(true);
-  setTimeout(() => setCopied(false), 2000);
-};
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const submitReview = async () => {
     if (!user) return navigate('/login');
@@ -90,37 +103,45 @@ export default function AgentDetail() {
       <Link to="/marketplace" className="mt-4 text-sm text-gray-900 hover:underline">
         Back to marketplace
       </Link>
-      <button
-    onClick={handleShare}
-    className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors flex items-center gap-2"
-  >
-    {copied ? '✓ Copied!' : '🔗 Share'}
-  </button>
     </div>
   );
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-10">
 
-      {/* Back */}
-      <Link
-        to="/marketplace"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-8"
-      >
-        ← Back to marketplace
-      </Link>
+      {/* Back + Share */}
+      <div className="flex items-center justify-between mb-8">
+        <Link
+          to="/marketplace"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          ← Back to marketplace
+        </Link>
+        <button
+          onClick={handleShare}
+          className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors flex items-center gap-2"
+        >
+          {copied ? '✓ Copied!' : '🔗 Share'}
+        </button>
+      </div>
 
       {/* Header card */}
       <div className="border border-gray-200 rounded-3xl p-8 mb-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium capitalize border ${CATEGORY_COLORS[agent.category] || 'bg-gray-100 text-gray-600 border-gray-100'}`}>
                 {CATEGORY_EMOJIS[agent.category]} {agent.category}
               </span>
               {agent.creatorId?.isVerified && (
                 <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full text-xs font-medium">
                   ✓ Verified Creator
+                </span>
+              )}
+              {/* Verified by SkillVerse badge */}
+              {agent.isPublished && (
+                <span className="bg-green-50 text-green-700 border border-green-100 px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1">
+                  ✦ Verified by SkillVerse
                 </span>
               )}
             </div>
@@ -138,7 +159,7 @@ export default function AgentDetail() {
         </div>
 
         {/* Meta */}
-        <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-6 border-b border-gray-100">
+        <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-6 border-b border-gray-100 flex-wrap">
           <span>by {agent.creatorId?.name}</span>
           {agent.reviewCount > 0 && (
             <span className="flex items-center gap-1">
@@ -158,6 +179,19 @@ export default function AgentDetail() {
             </span>
           )}
         </div>
+
+        {/* Verified by SkillVerse detail */}
+        {agent.isPublished && (
+          <div className="bg-green-50 border border-green-100 rounded-xl px-4 py-3 mb-6 flex items-center gap-3">
+            <span className="text-green-600 text-lg">✦</span>
+            <div>
+              <p className="text-xs font-semibold text-green-800">Verified by SkillVerse</p>
+              <p className="text-xs text-green-600 mt-0.5">
+                This agent has been reviewed and approved by the SkillVerse team for quality and accuracy.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Buttons */}
         <div className="flex flex-col gap-2">
@@ -200,19 +234,38 @@ export default function AgentDetail() {
         </div>
       </div>
 
+      {/* Capabilities */}
       {agent.capabilities?.length > 0 && (
-  <div className="mb-6">
-    <h2 className="font-semibold text-gray-900 mb-3">What this agent can do</h2>
-    <div className="space-y-2">
-      {agent.capabilities.map((cap, i) => (
-        <div key={i} className="flex items-start gap-2.5">
-          <span className="text-green-500 mt-0.5 shrink-0">✓</span>
-          <span className="text-sm text-gray-600">{cap}</span>
+        <div className="border border-gray-200 rounded-2xl p-5 mb-6">
+          <h2 className="font-semibold text-gray-900 mb-3">What this agent can do</h2>
+          <div className="space-y-2">
+            {agent.capabilities.map((cap, i) => (
+              <div key={i} className="flex items-start gap-2.5">
+                <span className="text-green-500 mt-0.5 shrink-0">✓</span>
+                <span className="text-sm text-gray-600">{cap}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
+
+      {/* Knowledge Sources */}
+      {agent.knowledgeSources?.length > 0 && (
+        <div className="border border-gray-200 rounded-2xl p-5 mb-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Knowledge Sources</h2>
+          <p className="text-xs text-gray-400 mb-3">This agent's knowledge is based on:</p>
+          <div className="flex gap-2 flex-wrap">
+            {agent.knowledgeSources.map((source, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 bg-gray-50 border border-gray-200 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium"
+              >
+                {KNOWLEDGE_SOURCE_ICONS[source] || '📌'} {source}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Example prompts */}
       {agent.examplePrompts?.length > 0 && (
@@ -242,28 +295,28 @@ export default function AgentDetail() {
         </div>
       )}
 
-      {/* Embed Section — show only to creator */}
-{user && agent.creatorId?._id === user.id && (
-  <div className="border border-gray-200 rounded-2xl p-5 mb-6">
-    <h2 className="font-semibold text-gray-900 mb-1">Embed this agent</h2>
-    <p className="text-sm text-gray-500 mb-3">Add this agent to any website with one line of code.</p>
-    <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs text-gray-600 break-all select-all border border-gray-100">
-      {`<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`}
-    </div>
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(
-          `<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`
-        );
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="mt-3 text-xs border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-400 transition-colors"
-    >
-      {copied ? '✓ Copied!' : 'Copy embed code'}
-    </button>
-  </div>
-)}
+      {/* Embed — sirf creator ko */}
+      {user && agent.creatorId?._id === user.id && (
+        <div className="border border-gray-200 rounded-2xl p-5 mb-6">
+          <h2 className="font-semibold text-gray-900 mb-1">Embed this agent</h2>
+          <p className="text-sm text-gray-500 mb-3">Add this agent to any website with one line of code.</p>
+          <div className="bg-gray-50 rounded-xl p-3 font-mono text-xs text-gray-600 break-all select-all border border-gray-100">
+            {`<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`}
+          </div>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `<iframe src="${window.location.origin}/embed/${agent._id}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`
+              );
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="mt-3 text-xs border border-gray-200 px-3 py-1.5 rounded-lg hover:border-gray-400 transition-colors"
+          >
+            {copied ? '✓ Copied!' : 'Copy embed code'}
+          </button>
+        </div>
+      )}
 
       {/* Reviews */}
       <div>
@@ -333,7 +386,6 @@ export default function AgentDetail() {
           }}
         />
       )}
-
     </div>
   );
 }
