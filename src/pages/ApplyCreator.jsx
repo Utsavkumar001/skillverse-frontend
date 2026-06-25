@@ -129,6 +129,17 @@ export default function ApplyCreator() {
         </p>
       </div>
 
+      {/* Invite-only banner */}
+      <div className="bg-gray-900 text-white rounded-2xl px-5 py-4 mb-8 flex items-center gap-3">
+        <span className="text-xl shrink-0">🔒</span>
+        <div>
+          <p className="text-sm font-semibold">Creator applications are currently limited</p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            We carefully review each application to maintain quality on our platform. Not everyone is accepted.
+          </p>
+        </div>
+      </div>
+
       {/* Benefits */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         {[

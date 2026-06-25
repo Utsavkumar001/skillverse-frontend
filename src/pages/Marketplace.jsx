@@ -132,7 +132,12 @@ export default function Marketplace() {
               <p className="text-sm text-gray-500 line-clamp-2 mb-4">{agent.description}</p>
               <div className="flex items-center justify-between text-xs text-gray-400">
                 <div className="flex items-center gap-1.5">
-                  <span>by {agent.creatorId?.name || 'Creator'}</span>
+                  <Link
+                    to={`/creator/${agent.creatorId?._id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:underline">
+                    by {agent.creatorId?.name || 'Creator'}
+                  </Link>
                   {agent.creatorId?.isVerified && (
                     <span className="bg-blue-50 text-blue-600 border border-blue-100 px-1.5 py-0.5 rounded-full font-medium">
                       ✓

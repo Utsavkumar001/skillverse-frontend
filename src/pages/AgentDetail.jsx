@@ -160,7 +160,13 @@ export default function AgentDetail() {
 
         {/* Meta */}
         <div className="flex items-center gap-4 text-sm text-gray-400 mb-6 pb-6 border-b border-gray-100 flex-wrap">
-          <span>by {agent.creatorId?.name}</span>
+          
+          <Link
+              to={`/creator/${agent.creatorId?._id}`}
+              className="hover:text-gray-900 hover:underline transition-colors">
+              by {agent.creatorId?.name}
+            </Link>
+          
           {agent.reviewCount > 0 && (
             <span className="flex items-center gap-1">
               <span className="text-amber-400">★</span>

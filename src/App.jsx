@@ -26,6 +26,7 @@ import CreatorEarnings from './pages/CreatorEarnings';
 import VerifyEmail from './pages/VerifyEmail';
 import AdminPanel from './pages/AdminPanel';
 import ApplyCreator from './pages/ApplyCreator';
+import CreatorProfile from './pages/CreatorProfile';
 
 
 
@@ -82,6 +83,8 @@ export default function App() {
                 <Route path="/apply-creator" element={
                   <ProtectedRoute><ApplyCreator /></ProtectedRoute>
                 } />
+                <Route path="/creator/:id" element={<CreatorProfile />} />
+                
               </Routes>
               <Footer />
             </>
