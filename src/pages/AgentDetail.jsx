@@ -301,6 +301,17 @@ export default function AgentDetail() {
         </div>
       )}
 
+      {/* Changelog — YAHAN ADD KARO */}
+      {agent.changelog?.length > 0 && (
+        <div className="flex gap-2 flex-wrap mb-8">
+          {agent.tags.map((tag, i) => (
+            <span key={i} className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full capitalize">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Embed — sirf creator ko */}
       {user && agent.creatorId?._id === user.id && (
         <div className="border border-gray-200 rounded-2xl p-5 mb-6">

@@ -12,6 +12,13 @@ export default function EditAgent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [changelog, setChangelog] = useState([]);
+
+  // Changelog form state
+  const [newVersion, setNewVersion] = useState('');
+  const [newChanges, setNewChanges] = useState('');
+  const [addingChangelog, setAddingChangelog] = useState(false);
+  const [changelogSuccess, setChangelogSuccess] = useState('');
 
   useEffect(() => {
     api.get(`/agents/${id}`).then((res) => {
@@ -34,6 +41,7 @@ export default function EditAgent() {
         externalApiUrl: a.externalApiUrl || '',
         knowledgeSources: a.knowledgeSources || [],
       });
+      setChangelog(a.changelog || []);
       setLoading(false);
     });
   }, [id]);
@@ -57,6 +65,27 @@ export default function EditAgent() {
     }
   };
 
+  const handleAddChangelog = async () => {
+    if (!newVersion || !newChanges.trim()) return;
+    setAddingChangelog(true);
+    try {
+      const changes = newChanges.split('\n').map(c => c.trim()).filter(Boolean);
+      const { data } = await api.patch(`/agents/${id}/changelog`, {
+        version: newVersion,
+        changes,
+      });
+      setChangelog(data.agent.changelog || []);
+      setNewVersion('');
+      setNewChanges('');
+      setChangelogSuccess('Changelog updated!');
+      setTimeout(() => setChangelogSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update changelog');
+    } finally {
+      setAddingChangelog(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center mt-20 text-gray-400">Loading...</div>;
 
   return (
@@ -74,24 +103,14 @@ export default function EditAgent() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Agent Type</label>
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => set('agentType', 'internal')}
-              className={`p-4 rounded-xl border-2 text-left transition-all ${
-                form.agentType === 'internal' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
+            <button type="button" onClick={() => set('agentType', 'internal')}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${form.agentType === 'internal' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
               <div className="text-xl mb-1">🤖</div>
               <p className="font-medium text-sm text-gray-900">Internal</p>
               <p className="text-xs text-gray-500 mt-0.5">Use SkillVerse AI</p>
             </button>
-            <button
-              type="button"
-              onClick={() => set('agentType', 'external')}
-              className={`p-4 rounded-xl border-2 text-left transition-all ${
-                form.agentType === 'external' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
+            <button type="button" onClick={() => set('agentType', 'external')}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${form.agentType === 'external' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
               <div className="text-xl mb-1">🔗</div>
               <p className="font-medium text-sm text-gray-900">External</p>
               <p className="text-xs text-gray-500 mt-0.5">Connect your own API</p>
@@ -122,47 +141,33 @@ export default function EditAgent() {
         {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Agent name</label>
-          <input
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-            value={form.title}
-            onChange={(e) => set('title', e.target.value)}
-          />
+          <input className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            value={form.title} onChange={(e) => set('title', e.target.value)} />
         </div>
 
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea
-            rows={2}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
-            value={form.description}
-            onChange={(e) => set('description', e.target.value)}
-          />
+          <textarea rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+            value={form.description} onChange={(e) => set('description', e.target.value)} />
         </div>
 
         {/* Category */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <select
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-            value={form.category}
-            onChange={(e) => set('category', e.target.value)}
-          >
+          <select className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+            value={form.category} onChange={(e) => set('category', e.target.value)}>
             {CATEGORIES.map((c) => <option key={c} value={c} className="capitalize">{c}</option>)}
           </select>
         </div>
 
-        {/* System Prompt — only internal */}
+        {/* System Prompt */}
         {form.agentType === 'internal' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">System prompt</label>
             <p className="text-xs text-gray-400 mb-2">This defines your agent's behaviour</p>
-            <textarea
-              rows={6}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none font-mono"
-              value={form.systemPrompt}
-              onChange={(e) => set('systemPrompt', e.target.value)}
-            />
+            <textarea rows={6} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none font-mono"
+              value={form.systemPrompt} onChange={(e) => set('systemPrompt', e.target.value)} />
           </div>
         )}
 
@@ -170,17 +175,14 @@ export default function EditAgent() {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Example prompts</label>
           {form.examplePrompts.map((p, i) => (
-            <input
-              key={i}
+            <input key={i}
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none mb-2"
-              value={p}
-              placeholder={`Example prompt ${i + 1}`}
+              value={p} placeholder={`Example prompt ${i + 1}`}
               onChange={(e) => {
                 const arr = [...form.examplePrompts];
                 arr[i] = e.target.value;
                 set('examplePrompts', arr);
-              }}
-            />
+              }} />
           ))}
         </div>
 
@@ -195,39 +197,22 @@ export default function EditAgent() {
               { value: 'monthly', label: '📅 Monthly', desc: 'Monthly subscription' },
               { value: 'yearly', label: '🗓️ Yearly', desc: 'Annual subscription' },
             ].map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => set('pricingModel', option.value)}
-                className={`p-3 rounded-xl border-2 text-left transition-all ${
-                  form.pricingModel === option.value
-                    ? 'border-gray-900 bg-gray-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
+              <button key={option.value} type="button" onClick={() => set('pricingModel', option.value)}
+                className={`p-3 rounded-xl border-2 text-left transition-all ${form.pricingModel === option.value ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <p className="text-sm font-medium text-gray-900">{option.label}</p>
                 <p className="text-xs text-gray-500 mt-0.5">{option.desc}</p>
               </button>
             ))}
           </div>
 
-          {/* Freemium */}
           {form.pricingModel === 'freemium' && (
             <div className="border border-gray-200 rounded-xl p-4 space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-2">Free queries per day</label>
                 <div className="flex gap-2 flex-wrap">
                   {[0, ...FREE_QUERY_OPTIONS].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => set('freeQueriesPerDay', n)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                        form.freeQueriesPerDay === n
-                          ? 'bg-gray-900 text-white border-gray-900'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
+                    <button key={n} type="button" onClick={() => set('freeQueriesPerDay', n)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${form.freeQueriesPerDay === n ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
                       {n === 0 ? 'None' : n}
                     </button>
                   ))}
@@ -237,16 +222,8 @@ export default function EditAgent() {
                 <label className="block text-xs font-medium text-gray-700 mb-2">Free queries per month</label>
                 <div className="flex gap-2 flex-wrap">
                   {[0, ...FREE_QUERY_OPTIONS].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => set('freeQueriesPerMonth', n)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                        form.freeQueriesPerMonth === n
-                          ? 'bg-gray-900 text-white border-gray-900'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                      }`}
-                    >
+                    <button key={n} type="button" onClick={() => set('freeQueriesPerMonth', n)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${form.freeQueriesPerMonth === n ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-200 text-gray-600 hover:border-gray-400'}`}>
                       {n === 0 ? 'None' : n}
                     </button>
                   ))}
@@ -254,13 +231,8 @@ export default function EditAgent() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Price after free limit (₹)</label>
-                <input
-                  type="number" min="0"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
-                  value={form.price}
-                  onChange={(e) => set('price', Number(e.target.value))}
-                  placeholder="e.g. 99"
-                />
+                <input type="number" min="0" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none"
+                  value={form.price} onChange={(e) => set('price', Number(e.target.value))} placeholder="e.g. 99" />
               </div>
             </div>
           )}
@@ -268,39 +240,24 @@ export default function EditAgent() {
           {form.pricingModel === 'one-time' && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Price (₹)</label>
-              <input
-                type="number" min="0"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                value={form.price}
-                onChange={(e) => set('price', Number(e.target.value))}
-                placeholder="e.g. 499"
-              />
+              <input type="number" min="0" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                value={form.price} onChange={(e) => set('price', Number(e.target.value))} placeholder="e.g. 499" />
             </div>
           )}
 
           {form.pricingModel === 'monthly' && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Monthly price (₹)</label>
-              <input
-                type="number" min="0"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                value={form.monthlyPrice}
-                onChange={(e) => set('monthlyPrice', Number(e.target.value))}
-                placeholder="e.g. 99"
-              />
+              <input type="number" min="0" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                value={form.monthlyPrice} onChange={(e) => set('monthlyPrice', Number(e.target.value))} placeholder="e.g. 99" />
             </div>
           )}
 
           {form.pricingModel === 'yearly' && (
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Yearly price (₹)</label>
-              <input
-                type="number" min="0"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-                value={form.yearlyPrice}
-                onChange={(e) => set('yearlyPrice', Number(e.target.value))}
-                placeholder="e.g. 999"
-              />
+              <input type="number" min="0" className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+                value={form.yearlyPrice} onChange={(e) => set('yearlyPrice', Number(e.target.value))} placeholder="e.g. 999" />
             </div>
           )}
         </div>
@@ -308,41 +265,26 @@ export default function EditAgent() {
         {/* Tags */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>
-          <input
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
-            value={form.tags}
-            onChange={(e) => set('tags', e.target.value)}
-          />
+          <input className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none"
+            value={form.tags} onChange={(e) => set('tags', e.target.value)} />
         </div>
 
         {/* Capabilities */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Capabilities</label>
           <p className="text-xs text-gray-400 mb-2">What can this agent do? (one per line)</p>
-          <textarea
-            rows={4}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+          <textarea rows={4} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
             value={form.capabilities?.join('\n') || ''}
-            onChange={(e) => set('capabilities', e.target.value.split('\n').filter(Boolean))}
-          />
+            onChange={(e) => set('capabilities', e.target.value.split('\n').filter(Boolean))} />
         </div>
 
         {/* Knowledge Sources */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Knowledge Sources</label>
-          <p className="text-xs text-gray-400 mb-3">
-            What is this agent's knowledge based on? Users will see this as a trust signal.
-          </p>
+          <p className="text-xs text-gray-400 mb-3">What is this agent's knowledge based on? Users will see this as a trust signal.</p>
           <div className="flex gap-2 flex-wrap">
-            {[
-              'Books', 'Research Papers', 'Personal Notes',
-              'Company SOPs', 'Videos', 'PDFs',
-              'Fine-tuned Model', 'External API',
-              'IIT/University Notes', 'GATE/Exam PYQs',
-            ].map((source) => (
-              <button
-                key={source}
-                type="button"
+            {['Books', 'Research Papers', 'Personal Notes', 'Company SOPs', 'Videos', 'PDFs', 'Fine-tuned Model', 'External API', 'IIT/University Notes', 'GATE/Exam PYQs'].map((source) => (
+              <button key={source} type="button"
                 onClick={() => {
                   const current = form.knowledgeSources || [];
                   const updated = current.includes(source)
@@ -354,16 +296,99 @@ export default function EditAgent() {
                   (form.knowledgeSources || []).includes(source)
                     ? 'bg-gray-900 text-white border-gray-900'
                     : 'border-gray-200 text-gray-600 hover:border-gray-400'
-                }`}
-              >
+                }`}>
                 {(form.knowledgeSources || []).includes(source) ? '✓ ' : ''}{source}
               </button>
             ))}
           </div>
           {(form.knowledgeSources || []).length > 0 && (
-            <p className="text-xs text-gray-400 mt-2">
-              Selected: {form.knowledgeSources.join(', ')}
-            </p>
+            <p className="text-xs text-gray-400 mt-2">Selected: {form.knowledgeSources.join(', ')}</p>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-200 pt-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">Version & Changelog</h2>
+          <p className="text-xs text-gray-400 mb-4">
+            Let users know what's new. Each update builds trust and shows your agent is actively maintained.
+          </p>
+
+          {/* Add new changelog entry */}
+          <div className="border border-gray-200 rounded-xl p-4 mb-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">Add Update</p>
+
+            {changelogSuccess && (
+              <div className="bg-green-50 text-green-700 text-xs px-3 py-2 rounded-lg mb-3">
+                ✓ {changelogSuccess}
+              </div>
+            )}
+
+            <div className="flex gap-3 mb-3">
+              <div className="w-32">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Version</label>
+                <input
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                  placeholder="e.g. 1.1"
+                  value={newVersion}
+                  onChange={(e) => setNewVersion(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                What changed? (one per line)
+              </label>
+              <textarea
+                rows={3}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+                placeholder={"Improved reasoning accuracy\nAdded UPSC examples\nFaster responses"}
+                value={newChanges}
+                onChange={(e) => setNewChanges(e.target.value)}
+              />
+            </div>
+
+            <button
+              onClick={handleAddChangelog}
+              disabled={addingChangelog || !newVersion || !newChanges.trim()}
+              className="bg-gray-900 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-gray-700 disabled:opacity-40 transition-colors"
+            >
+              {addingChangelog ? 'Adding...' : '+ Add to Changelog'}
+            </button>
+          </div>
+
+          {/* Existing changelog */}
+          {changelog.length > 0 && (
+            <div className="space-y-3">
+              {changelog.map((entry, i) => (
+                <div key={i} className="border border-gray-100 rounded-xl p-4 bg-gray-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold bg-gray-900 text-white px-2 py-0.5 rounded-full">
+                      v{entry.version}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      {new Date(entry.date).toLocaleDateString('en-IN', {
+                        day: 'numeric', month: 'short', year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                  <ul className="space-y-1">
+                    {entry.changes.map((change, j) => (
+                      <li key={j} className="text-xs text-gray-600 flex items-start gap-2">
+                        <span className="text-gray-400 mt-0.5 shrink-0">•</span>
+                        {change}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {changelog.length === 0 && (
+            <div className="text-center py-6 border border-dashed border-gray-200 rounded-xl">
+              <p className="text-xs text-gray-400">No changelog entries yet</p>
+            </div>
           )}
         </div>
 
