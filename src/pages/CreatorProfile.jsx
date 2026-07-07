@@ -227,7 +227,7 @@ export default function CreatorProfile() {
         {(creator.creatorApplication?.linkedin || creator.creatorApplication?.portfolio) && (
           <div className="mt-4 flex gap-3 flex-wrap">
             {creator.creatorApplication?.linkedin && (
-              
+              <a
                 href={creator.creatorApplication.linkedin}
                 target="_blank"
                 rel="noreferrer"
@@ -237,7 +237,7 @@ export default function CreatorProfile() {
               </a>
             )}
             {creator.creatorApplication?.portfolio && (
-              
+              <a
                 href={creator.creatorApplication.portfolio}
                 target="_blank"
                 rel="noreferrer"
