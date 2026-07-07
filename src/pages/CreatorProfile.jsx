@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 const CATEGORY_COLORS = {
@@ -13,10 +14,20 @@ const CATEGORY_COLORS = {
 
 export default function CreatorProfile() {
   const { id } = useParams();
+  const { user, login } = useAuth();
   const [creator, setCreator] = useState(null);
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Edit state
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const isOwnProfile = user?._id === id || user?.id === id;
 
   useEffect(() => {
     Promise.all([
@@ -25,10 +36,32 @@ export default function CreatorProfile() {
     ]).then(([creatorRes, agentsRes]) => {
       setCreator(creatorRes.data);
       setAgents(agentsRes.data);
+      setEditName(creatorRes.data.name || '');
+      setEditBio(creatorRes.data.bio || '');
     }).catch(() => {
       setError('Creator not found');
     }).finally(() => setLoading(false));
   }, [id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { data } = await api.patch('/creator-profile/update-bio', {
+        name: editName,
+        bio: editBio,
+      });
+      setCreator(prev => ({ ...prev, name: data.name, bio: data.bio }));
+      // AuthContext update karo
+      login(localStorage.getItem('token'), { ...user, name: data.name });
+      setEditing(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) return (
     <div className="max-w-3xl mx-auto px-6 py-10 animate-pulse">
@@ -64,30 +97,60 @@ export default function CreatorProfile() {
         ← Back to marketplace
       </Link>
 
+      {/* Success message */}
+      {saveSuccess && (
+        <div className="bg-green-50 text-green-700 text-sm px-4 py-3 rounded-lg mb-6">
+          ✓ Profile updated successfully!
+        </div>
+      )}
+
       {/* Creator Card */}
       <div className="border border-gray-200 rounded-3xl p-8 mb-8">
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="w-20 h-20 bg-gray-900 rounded-2xl flex items-center justify-center text-white text-3xl font-semibold shrink-0">
-            {creator.name?.charAt(0).toUpperCase()}
+            {(editing ? editName : creator.name)?.charAt(0).toUpperCase()}
           </div>
 
           <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h1 className="text-2xl font-semibold text-gray-900">{creator.name}</h1>
-              {creator.isVerified && (
-                <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full text-xs font-medium">
-                  ✓ Verified Expert
-                </span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1">
+                {editing ? (
+                  <input
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900 mb-2"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Your name"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h1 className="text-2xl font-semibold text-gray-900">{creator.name}</h1>
+                    {creator.isVerified && (
+                      <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-full text-xs font-medium">
+                        ✓ Verified Expert
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {creator.creatorApplication?.expertise && (
+                  <p className="text-gray-500 text-sm mb-3">{creator.creatorApplication.expertise}</p>
+                )}
+              </div>
+
+              {/* Edit button — sirf apne profile pe */}
+              {isOwnProfile && !editing && (
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-xs border border-gray-200 px-3 py-1.5 rounded-lg text-gray-600 hover:border-gray-400 transition-colors shrink-0"
+                >
+                  ✏️ Edit Profile
+                </button>
               )}
             </div>
 
-            {creator.creatorApplication?.expertise && (
-              <p className="text-gray-500 text-sm mb-3">{creator.creatorApplication.expertise}</p>
-            )}
-
             {/* Stats */}
-            <div className="flex gap-4 flex-wrap">
+            <div className="flex gap-4 flex-wrap mt-2">
               <div className="text-center">
                 <p className="text-xl font-semibold text-gray-900">{agents.length}</p>
                 <p className="text-xs text-gray-400">Published Agents</p>
@@ -110,19 +173,61 @@ export default function CreatorProfile() {
           </div>
         </div>
 
-        {/* About */}
-        {creator.creatorApplication?.reason && (
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <h2 className="text-sm font-semibold text-gray-700 mb-2">About</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">{creator.creatorApplication.reason}</p>
-          </div>
-        )}
+        {/* Bio section */}
+        <div className="mt-6 pt-6 border-t border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">About</h2>
+
+          {editing ? (
+            <textarea
+              rows={4}
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 resize-none"
+              placeholder="Tell users about yourself — your expertise, experience, what kind of agents you build..."
+              value={editBio}
+              onChange={(e) => setEditBio(e.target.value)}
+            />
+          ) : (
+            creator.bio ? (
+              <p className="text-sm text-gray-500 leading-relaxed">{creator.bio}</p>
+            ) : (
+              isOwnProfile ? (
+                <p className="text-sm text-gray-400 italic">
+                  No bio yet. Click "Edit Profile" to add one.
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 italic">No bio added yet.</p>
+              )
+            )
+          )}
+
+          {/* Save/Cancel buttons */}
+          {editing && (
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-40 transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setEditing(false);
+                  setEditName(creator.name || '');
+                  setEditBio(creator.bio || '');
+                }}
+                className="border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm hover:border-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Links */}
         {(creator.creatorApplication?.linkedin || creator.creatorApplication?.portfolio) && (
           <div className="mt-4 flex gap-3 flex-wrap">
             {creator.creatorApplication?.linkedin && (
-              <a
+              
                 href={creator.creatorApplication.linkedin}
                 target="_blank"
                 rel="noreferrer"
@@ -132,7 +237,7 @@ export default function CreatorProfile() {
               </a>
             )}
             {creator.creatorApplication?.portfolio && (
-              <a
+              
                 href={creator.creatorApplication.portfolio}
                 target="_blank"
                 rel="noreferrer"

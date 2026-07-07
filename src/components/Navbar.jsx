@@ -130,6 +130,11 @@ export default function Navbar() {
               {/* Creator links */}
               {isCreator && (
                 <>
+                  <Link to={`/creator/${user?.id || user?._id}`}
+                    onClick={() => setShowProfile(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    🌟 My Public Profile
+                  </Link>            
                   <Link
                     to="/creator/dashboard"
                     onClick={() => setShowProfile(false)}
