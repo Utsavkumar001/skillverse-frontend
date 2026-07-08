@@ -9,7 +9,7 @@ export default function Footer() {
     <footer className="border-t border-gray-100 mt-20 py-8 px-6">
       <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
         <span>© 2026 SkillVerse</span>
-        <div className="flex gap-6">
+        <div className="flex gap-6 flex-wrap justify-center">
           <Link to="/marketplace" className="hover:text-gray-900 transition-colors">Marketplace</Link>
           <Link to="/api-docs" className="hover:text-gray-900 transition-colors">API Docs</Link>
           {isCreator ? (
@@ -17,6 +17,8 @@ export default function Footer() {
           ) : (
             <Link to="/apply-creator" className="hover:text-gray-900 transition-colors">Become a Creator</Link>
           )}
+          <Link to="/terms" className="hover:text-gray-900 transition-colors">Terms</Link>
+          <Link to="/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link>
         </div>
       </div>
     </footer>

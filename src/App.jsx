@@ -27,8 +27,8 @@ import VerifyEmail from './pages/VerifyEmail';
 import AdminPanel from './pages/AdminPanel';
 import ApplyCreator from './pages/ApplyCreator';
 import CreatorProfile from './pages/CreatorProfile';
-
-
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 export default function App() {
   return (
@@ -84,6 +84,8 @@ export default function App() {
                   <ProtectedRoute><ApplyCreator /></ProtectedRoute>
                 } />
                 <Route path="/creator/:id" element={<CreatorProfile />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
                 
               </Routes>
               <Footer />
