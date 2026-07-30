@@ -29,6 +29,7 @@ import ApplyCreator from './pages/ApplyCreator';
 import CreatorProfile from './pages/CreatorProfile';
 import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import KnowledgeBase from './pages/KnowledgeBase';
 
 export default function App() {
   return (
@@ -86,6 +87,9 @@ export default function App() {
                 <Route path="/creator/:id" element={<CreatorProfile />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/knowledge-base/:agentId" element={
+                  <ProtectedRoute><KnowledgeBase /></ProtectedRoute>
+                } />
                 
               </Routes>
               <Footer />
