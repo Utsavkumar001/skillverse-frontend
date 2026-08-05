@@ -7,6 +7,8 @@ export default function KnowledgeBase() {
   const [agent, setAgent] = useState(null);
   const [files, setFiles] = useState([]);
   const [isReady, setIsReady] = useState(false);
+  const [mode, setMode] = useState('hybrid');
+  const [savingMode, setSavingMode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
@@ -21,8 +23,22 @@ export default function KnowledgeBase() {
       setAgent(agentRes.data);
       setFiles(kbRes.data.files || []);
       setIsReady(kbRes.data.isReady || false);
+      setMode(kbRes.data.mode || 'hybrid');
     }).finally(() => setLoading(false));
   }, [agentId]);
+
+  const handleModeChange = async (newMode) => {
+    if (newMode === mode) return;
+    setSavingMode(true);
+    try {
+      await api.patch(`/knowledge-base/${agentId}/mode`, { mode: newMode });
+      setMode(newMode);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update mode');
+    } finally {
+      setSavingMode(false);
+    }
+  };
 
   // Auto-refresh jab files processing mein hain
   useEffect(() => {
@@ -137,6 +153,36 @@ export default function KnowledgeBase() {
               ? `${files.filter(f => f.status === 'ready').length} file(s) indexed — Agent will answer from your uploaded content`
               : 'Upload PDFs to give your agent expert knowledge'}
           </p>
+        </div>
+      </div>
+
+      {/* Answer mode */}
+      <div className="border border-gray-200 rounded-2xl p-5 mb-8">
+        <h3 className="text-sm font-semibold text-gray-900 mb-1">Answer mode</h3>
+        <p className="text-xs text-gray-400 mb-4">
+          What should the agent do when a question isn't covered by your uploaded content?
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => handleModeChange('strict')}
+            disabled={savingMode}
+            className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+              mode === 'strict' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <p className="font-medium text-sm text-gray-900">🔒 Strict</p>
+            <p className="text-xs text-gray-500 mt-1">Only answers from your files. Says "not in my knowledge base" otherwise.</p>
+          </button>
+          <button
+            onClick={() => handleModeChange('hybrid')}
+            disabled={savingMode}
+            className={`p-4 rounded-xl border-2 text-left transition-all disabled:opacity-50 ${
+              mode === 'hybrid' ? 'border-gray-900 bg-gray-50' : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            <p className="font-medium text-sm text-gray-900">🧠 Hybrid</p>
+            <p className="text-xs text-gray-500 mt-1">Prefers your files, fills gaps with general AI knowledge — clearly labeled when it does.</p>
+          </button>
         </div>
       </div>
 

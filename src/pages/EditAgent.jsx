@@ -19,6 +19,9 @@ export default function EditAgent() {
   const [newChanges, setNewChanges] = useState('');
   const [addingChangelog, setAddingChangelog] = useState(false);
   const [changelogSuccess, setChangelogSuccess] = useState('');
+  const [hasExistingKey, setHasExistingKey] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     api.get(`/agents/${id}`).then((res) => {
@@ -39,14 +42,33 @@ export default function EditAgent() {
         capabilities: a.capabilities || [],
         agentType: a.agentType || 'internal',
         externalApiUrl: a.externalApiUrl || '',
+        externalApiKey: '',
         knowledgeSources: a.knowledgeSources || [],
       });
+      setHasExistingKey(!!a.hasExternalApiKey);
       setChangelog(a.changelog || []);
       setLoading(false);
     });
   }, [id]);
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handleTestConnection = async () => {
+    if (!form.externalApiUrl.trim()) return;
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { data } = await api.post('/agents/test-external', {
+        url: form.externalApiUrl,
+        apiKey: form.externalApiKey || undefined, // if blank, backend just won't send auth header
+      });
+      setTestResult(data);
+    } catch (err) {
+      setTestResult({ success: false, message: err.response?.data?.message || 'Test failed' });
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -126,10 +148,50 @@ export default function EditAgent() {
             <input
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 font-mono"
               value={form.externalApiUrl}
-              onChange={(e) => set('externalApiUrl', e.target.value)}
+              onChange={(e) => { set('externalApiUrl', e.target.value); setTestResult(null); }}
               placeholder="https://your-agent-api.com/chat"
             />
-            <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
+
+            <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">API Key (optional)</label>
+            <p className="text-xs text-gray-400 mb-2">
+              {hasExistingKey
+                ? 'A key is already saved. Leave blank to keep it, or type a new one to replace it.'
+                : "If your endpoint needs auth, we'll send it as Authorization: Bearer <key>"}
+            </p>
+            <input
+              type="password"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 font-mono"
+              value={form.externalApiKey}
+              onChange={(e) => { set('externalApiKey', e.target.value); setTestResult(null); }}
+              placeholder={hasExistingKey ? '•••••••• (saved — leave blank to keep)' : 'sk-... (leave blank if not needed)'}
+            />
+
+            <button
+              type="button"
+              onClick={handleTestConnection}
+              disabled={testing || !form.externalApiUrl.trim()}
+              className="mt-3 text-xs border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:border-gray-400 disabled:opacity-40 transition-colors"
+            >
+              {testing ? '⏳ Testing...' : '🔌 Test Connection'}
+            </button>
+            {hasExistingKey && !form.externalApiKey && (
+              <p className="text-xs text-gray-400 mt-1">Note: testing without typing the key will test without auth.</p>
+            )}
+
+            {testResult && (
+              <div className={`mt-3 rounded-lg p-3 text-xs ${
+                testResult.success
+                  ? 'bg-green-50 border border-green-100 text-green-700'
+                  : 'bg-red-50 border border-red-100 text-red-600'
+              }`}>
+                <p className="font-medium">{testResult.success ? '✓ ' : '✗ '}{testResult.message}</p>
+                {testResult.sampleReply && (
+                  <p className="mt-1 text-gray-500 italic">"{testResult.sampleReply.slice(0, 150)}{testResult.sampleReply.length > 150 ? '...' : ''}"</p>
+                )}
+              </div>
+            )}
+
+            <div className="mt-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
               <p className="text-xs text-blue-700 font-medium mb-1">📡 Request format we'll send:</p>
               <code className="text-xs text-blue-600 font-mono">{`POST {url}\n{ "message": "user message", "history": [...] }`}</code>
               <p className="text-xs text-blue-700 font-medium mt-2 mb-1">📨 Expected response:</p>

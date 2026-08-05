@@ -157,7 +157,7 @@ export default function CreatorDashboard() {
                   📊 Analytics
                 </Link>
                 <Link
-                  to={`/creator/knowledge-base/${agent._id}`}
+                  to={`/knowledge-base/${agent._id}`}
                   className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:border-gray-400 transition-colors"
                 >
                   🧠 Knowledge Base

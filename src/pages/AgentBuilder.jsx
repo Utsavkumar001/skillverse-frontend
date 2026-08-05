@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,6 +22,7 @@ const BLANK_FORM = {
   tags: '',
   capabilities: [],
   externalApiUrl: '',
+  externalApiKey: '',
   agentType: 'internal', // 'internal' | 'external'
   knowledgeSources: [],
 };
@@ -93,6 +94,8 @@ export default function AgentBuilder() {
   const [importMode, setImportMode] = useState('manual'); // 'manual' | 'json'
   const [jsonInput, setJsonInput] = useState('');
   const [jsonError, setJsonError] = useState('');
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState(null); // { success, message, sampleReply }
 
   useEffect(() => {
     const saved = localStorage.getItem('agentDraft');
@@ -106,6 +109,23 @@ export default function AgentBuilder() {
   }, [form]);
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handleTestConnection = async () => {
+    if (!form.externalApiUrl.trim()) return;
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const { data } = await api.post('/agents/test-external', {
+        url: form.externalApiUrl,
+        apiKey: form.externalApiKey,
+      });
+      setTestResult(data);
+    } catch (err) {
+      setTestResult({ success: false, message: err.response?.data?.message || 'Test failed' });
+    } finally {
+      setTesting(false);
+    }
+  };
 
   const clearDraft = () => {
     localStorage.removeItem('agentDraft');
@@ -136,6 +156,7 @@ export default function AgentBuilder() {
         freeQueriesPerMonth: parsed.freeQueriesPerMonth || 0,
         tags: Array.isArray(parsed.tags) ? parsed.tags.join(', ') : (parsed.tags || ''),
         externalApiUrl: parsed.externalApiUrl || '',
+        externalApiKey: parsed.externalApiKey || '',
         agentType: parsed.externalApiUrl ? 'external' : 'internal',
         knowledgeSources: parsed.knowledgeSources || [],
       });
@@ -200,6 +221,26 @@ export default function AgentBuilder() {
       setSaving(false);
     }
   };
+
+  if (user && user.role !== 'creator' && user.role !== 'admin') {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-10">
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 text-center">
+          <div className="text-3xl mb-3">🎓</div>
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Become a creator first</h1>
+          <p className="text-sm text-amber-700 mb-6">
+            Only approved creators can build and publish agents. Apply below — it only takes a minute.
+          </p>
+          <Link
+            to="/apply-creator"
+            className="inline-block bg-gray-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-700 transition-colors"
+          >
+            Apply to Create →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
@@ -413,10 +454,45 @@ export default function AgentBuilder() {
                 <input
                   className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 font-mono"
                   value={form.externalApiUrl}
-                  onChange={(e) => set('externalApiUrl', e.target.value)}
+                  onChange={(e) => { set('externalApiUrl', e.target.value); setTestResult(null); }}
                   placeholder="https://your-agent-api.com/chat"
                 />
-                <div className="mt-2 bg-blue-50 border border-blue-100 rounded-lg p-3">
+
+                <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">API Key (optional)</label>
+                <p className="text-xs text-gray-400 mb-2">
+                  If your endpoint needs auth, we'll send it as <code className="bg-gray-100 px-1 rounded">Authorization: Bearer &lt;key&gt;</code>
+                </p>
+                <input
+                  type="password"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 font-mono"
+                  value={form.externalApiKey}
+                  onChange={(e) => { set('externalApiKey', e.target.value); setTestResult(null); }}
+                  placeholder="sk-... (leave blank if not needed)"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleTestConnection}
+                  disabled={testing || !form.externalApiUrl.trim()}
+                  className="mt-3 text-xs border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:border-gray-400 disabled:opacity-40 transition-colors"
+                >
+                  {testing ? '⏳ Testing...' : '🔌 Test Connection'}
+                </button>
+
+                {testResult && (
+                  <div className={`mt-3 rounded-lg p-3 text-xs ${
+                    testResult.success
+                      ? 'bg-green-50 border border-green-100 text-green-700'
+                      : 'bg-red-50 border border-red-100 text-red-600'
+                  }`}>
+                    <p className="font-medium">{testResult.success ? '✓ ' : '✗ '}{testResult.message}</p>
+                    {testResult.sampleReply && (
+                      <p className="mt-1 text-gray-500 italic">"{testResult.sampleReply.slice(0, 150)}{testResult.sampleReply.length > 150 ? '...' : ''}"</p>
+                    )}
+                  </div>
+                )}
+
+                <div className="mt-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
                   <p className="text-xs text-blue-700 font-medium mb-1">📡 Request format we'll send:</p>
                   <code className="text-xs text-blue-600 font-mono">
                     {`POST {url}\n{ "message": "user message", "history": [...] }`}
